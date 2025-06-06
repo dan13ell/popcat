@@ -1,0 +1,409 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Czech Republic PopCat Clicks</title>
+  <style>
+    :root {
+      --primary: #1a1a1a;
+      --secondary: #252525;
+      --accent: #27ae60;
+      --text: #e0e0e0;
+      --text-secondary: #a0a0a0;
+    }
+
+    body {
+      font-family: Roboto, sans-serif;
+      background-color: var(--primary);
+      color: var(--text);
+      margin: 0;
+      padding: 20px;
+      display: flex;
+      justify-content: center;
+      min-height: 100vh;
+    }
+
+    .dashboard {
+      width: 100%;
+      max-width: 500px;
+      background-color: var(--secondary);
+      border-radius: 12px;
+      padding: 25px;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+      position: relative;
+    }
+
+    .header {
+      display: flex;
+      align-items: center;
+      margin-bottom: 25px;
+    }
+
+    .flag {
+      height: 40px;
+      margin-right: 15px;
+      border-radius: 4px;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+    }
+
+    h1 {
+      margin: 0;
+      font-size: 24px;
+      font-weight: 600;
+    }
+
+    .main-stat {
+      background-color: rgba(0, 0, 0, 0.2);
+      border-radius: 10px;
+      padding: 20px;
+      margin-bottom: 20px;
+      text-align: center;
+      position: relative;
+      min-height: 120px;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+    }
+
+    .big-number {
+      font-size: 42px;
+      font-weight: 700;
+      margin: 10px 0;
+      color: var(--accent);
+      text-align: center;
+      position: relative;
+      z-index: 2;
+    }
+
+    .stat-label {
+      font-size: 14px;
+      color: var(--text-secondary);
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      position: relative;
+      z-index: 2;
+    }
+
+    .stats-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 15px;
+      margin-bottom: 20px;
+    }
+
+    .stat-card {
+      background-color: rgba(0, 0, 0, 0.2);
+      border-radius: 8px;
+      padding: 15px;
+      text-align: center;
+    }
+
+    .stat-number {
+      font-size: 24px;
+      font-weight: 600;
+      margin: 5px 0;
+    }
+
+    .progress-container {
+      margin-top: 25px;
+    }
+
+    .progress-label {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 8px;
+      font-size: 14px;
+    }
+
+    .progress-bar {
+      height: 8px;
+      background-color: rgba(255, 255, 255, 0.1);
+      border-radius: 4px;
+      overflow: hidden;
+    }
+
+    .progress-fill {
+      height: 100%;
+      background-color: var(--accent);
+      width: 0%;
+      transition: width 0.5s ease;
+    }
+
+    .chart-container {
+      margin-top: 30px;
+      height: 200px;
+      position: relative;
+    }
+
+    .options {
+      margin-top: 25px;
+      border-top: 1px solid rgba(255, 255, 255, 0.1);
+      padding-top: 15px;
+    }
+
+    .option-btn {
+      background: none;
+      border: none;
+      color: var(--text);
+      font-size: 14px;
+      margin-right: 15px;
+      cursor: pointer;
+      padding: 5px 0;
+    }
+
+    .option-btn:hover {
+      color: var(--accent);
+    }
+
+    .previous-count {
+      position: absolute;
+      font-size: 16px;
+      color: rgba(255, 255, 255, 0.7);
+      background-color: rgba(39, 174, 96, 0.2);
+      padding: 5px 10px;
+      border-radius: 20px;
+      white-space: nowrap;
+      pointer-events: none;
+      opacity: 0;
+      transition: opacity 0.3s;
+      animation: float 6s infinite ease-in-out;
+      z-index: 1;
+    }
+
+    @keyframes float {
+      0%, 100% {
+        transform: translateY(0) rotate(0deg);
+      }
+      50% {
+        transform: translateY(-10px) rotate(5deg);
+      }
+    }
+
+    .show-previous {
+      opacity: 1;
+    }
+  </style>
+</head>
+<body>
+  <div class="dashboard">
+    <div class="header">
+      <img src="https://flagcdn.com/192x144/cz.png" class="flag" alt="Czech Flag">
+      <h1>Czech Republic PopCat Clicks</h1>
+    </div>
+
+    <div class="main-stat" id="main-stat">
+      <div class="big-number" id="click-count">0</div>
+      <div class="stat-label">Total Clicks</div>
+    </div>
+
+    <div class="stats-grid">
+      <div class="stat-card">
+        <div class="stat-number" id="current-rank">-</div>
+        <div class="stat-label">Current Rank</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-number" id="next-goal">1,000,000</div>
+        <div class="stat-label">To Next Million</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-number" id="clicks-1m">0</div>
+        <div class="stat-label">Avg / 1 Min</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-number" id="clicks-1h">0</div>
+        <div class="stat-label">Avg / 1 Hr</div>
+      </div>
+    </div>
+
+    <div class="progress-container">
+      <div class="progress-label">
+        <span>Progress to next million</span>
+        <span id="progress-percent">0%</span>
+      </div>
+      <div class="progress-bar">
+        <div class="progress-fill" id="progress-fill"></div>
+      </div>
+    </div>
+
+    <div class="chart-container">
+      <canvas id="historyChart"></canvas>
+    </div>
+
+    <div class="options">
+      <button class="option-btn">Change Country</button>
+      <button class="option-btn">Visit PopCat</button>
+      <button class="option-btn">Compare</button>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script>
+    let lastCount = 0;
+    let previousCount = 0;
+    let historyData = [];
+    const maxHistoryPoints = 30;
+    let historyChart = null;
+    let countryRankings = {};
+
+    const clickCountEl = document.getElementById('click-count');
+    const clicks1mEl = document.getElementById('clicks-1m');
+    const clicks1hEl = document.getElementById('clicks-1h');
+    const progressFillEl = document.getElementById('progress-fill');
+    const progressPercentEl = document.getElementById('progress-percent');
+    const mainStatEl = document.getElementById('main-stat');
+    const nextGoalEl = document.getElementById('next-goal');
+    const currentRankEl = document.getElementById('current-rank');
+
+    const ctx = document.getElementById('historyChart').getContext('2d');
+    function initChart() {
+      historyChart = new Chart(ctx, {
+        type: 'line',
+        data: {
+          labels: Array(maxHistoryPoints).fill(''),
+          datasets: [{
+            data: historyData,
+            borderColor: '#27ae60',
+            backgroundColor: 'rgba(39, 174, 96, 0.1)',
+            borderWidth: 2,
+            fill: true,
+            tension: 0.4,
+            pointRadius: 0
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          scales: {
+            x: { display: false },
+            y: {
+              display: true,
+              grid: { color: 'rgba(255, 255, 255, 0.1)' }
+            }
+          },
+          plugins: {
+            legend: { display: false }
+          }
+        }
+      });
+    }
+
+    function createPreviousCountBubble(count) {
+      if (count === 0) return;
+
+      const bubble = document.createElement('div');
+      bubble.className = 'previous-count';
+      bubble.textContent = `+${formatNumber(count)}`;
+
+      const rect = mainStatEl.getBoundingClientRect();
+      const padding = 30;
+
+      const x = Math.floor(Math.random() * (rect.width - padding * 2)) + padding;
+      const y = Math.floor(Math.random() * (rect.height - padding * 2)) + padding;
+
+      bubble.style.left = `${x}px`;
+      bubble.style.top = `${y}px`;
+      bubble.style.transform = `rotate(${Math.floor(Math.random() * 15) - 7}deg)`;
+
+      mainStatEl.appendChild(bubble);
+
+      setTimeout(() => bubble.classList.add('show-previous'), 50);
+      setTimeout(() => {
+        bubble.classList.remove('show-previous');
+        setTimeout(() => {
+          if (bubble.parentNode) bubble.parentNode.removeChild(bubble);
+        }, 300);
+      }, 3000);
+    }
+
+    function updateChart(newValue) {
+      historyData.push(newValue);
+      if (historyData.length > maxHistoryPoints) historyData.shift();
+      if (historyChart) {
+        historyChart.data.datasets[0].data = historyData;
+        historyChart.update();
+      }
+    }
+
+    function formatNumber(num) {
+      return num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+    }
+
+    function updateAverages(pointsGained, secondsPassed) {
+      if (secondsPassed > 0) {
+        const rate = pointsGained / secondsPassed;
+        clicks1mEl.textContent = formatNumber(Math.round(rate * 60));
+        clicks1hEl.textContent = formatNumber(Math.round(rate * 3600));
+      }
+    }
+
+    function updateProgress(current) {
+      const currentMillion = Math.floor(current / 1_000_000);
+      const nextGoal = 1_000_000 * (currentMillion + 1);
+      const remaining = nextGoal - current;
+
+      nextGoalEl.textContent = formatNumber(remaining);
+      const progress = (current % 1_000_000) / 1_000_000 * 100;
+      progressFillEl.style.width = `${progress}%`;
+      progressPercentEl.textContent = `${Math.round(progress)}%`;
+    }
+
+    function updateCountryRanking(data) {
+      const countries = Object.keys(data).map(code => ({ code, clicks: data[code] }));
+      countries.sort((a, b) => b.clicks - a.clicks);
+      const czIndex = countries.findIndex(c => c.code === 'CZ');
+      if (czIndex >= 0) {
+        currentRankEl.textContent = `${czIndex + 1}${getNumberSuffix(czIndex + 1)}`;
+      }
+      countryRankings = countries;
+    }
+
+    function getNumberSuffix(num) {
+      if (num >= 11 && num <= 13) return 'th';
+      switch (num % 10) {
+        case 1: return 'st';
+        case 2: return 'nd';
+        case 3: return 'rd';
+        default: return 'th';
+      }
+    }
+
+    async function fetchCzechClicks() {
+      try {
+        const proxyUrl = 'https://api.codetabs.com/v1/proxy/?quest=';
+        const apiUrl = 'https://leaderboard.popcat.click/';
+        const response = await fetch(proxyUrl + encodeURIComponent(apiUrl));
+        if (!response.ok) throw new Error('Network error');
+        const data = await response.json();
+
+        if (data && data.CZ) {
+          const newCount = data.CZ;
+          const now = new Date();
+          updateCountryRanking(data);
+          if (lastCount > 0) {
+            const diff = (now - lastUpdateTime) / 1000;
+            const gained = newCount - lastCount;
+            updateAverages(gained, diff);
+            if (gained > 0) createPreviousCountBubble(gained);
+          }
+          previousCount = lastCount;
+          lastCount = newCount;
+          lastUpdateTime = now;
+          clickCountEl.textContent = formatNumber(newCount);
+          updateProgress(newCount);
+          updateChart(newCount);
+        }
+      } catch (error) {
+        console.error('Error fetching data:', error);
+      }
+    }
+
+    let lastUpdateTime = null;
+    initChart();
+    fetchCzechClicks();
+    setInterval(fetchCzechClicks, 5000);
+  </script>
+</body>
+</html>
