@@ -11,10 +11,6 @@
             --accent: #27ae60;
             --text: #e0e0e0;
             --text-secondary: #a0a0a0;
-            /* Nové proměnné pro pruh */
-            --update-bar-color: #27ae60; /* Zelená barva lišty (stejná jako accent) */
-            --update-bar-glow-color: rgba(39, 174, 96, 0.7); /* Světlejší zelená pro záři */
-            --update-interval: 7s; /* Výchozí hodnota, bude přepsána JS */
         }
         
         body {
@@ -36,14 +32,70 @@
             padding: 25px;
             box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
             position: relative;
+            overflow: hidden;
+        }
+        
+        /* Precision Loading Bar */
+        .loading-bar-container {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 3px;
+            background-color: rgba(255, 255, 255, 0.05);
+            z-index: 10;
+        }
+        
+        .loading-bar {
+            height: 100%;
+            width: 100%;
+            background-color: var(--accent);
+            transform-origin: left center;
+            transform: scaleX(0);
+            border-radius: 0 2px 2px 0;
+            animation: loadingProgress 7000ms linear forwards;
+        }
+        
+        .loading-bar-reset {
+            animation: loadingReset 300ms ease-out forwards;
+        }
+        
+        @keyframes loadingProgress {
+            0% { transform: scaleX(0); }
+            100% { transform: scaleX(1); }
+        }
+        
+        @keyframes loadingReset {
+            0% { 
+                transform: scaleX(1);
+                opacity: 1;
+            }
+            100% { 
+                transform: scaleX(1.2);
+                opacity: 0;
+            }
+        }
+        
+        /* Tab effect */
+        .dashboard::before {
+            content: '';
+            position: absolute;
+            top: 3px;
+            left: 0;
+            right: 0;
+            height: 6px;
+            background-color: var(--secondary);
+            border-radius: 0 0 6px 6px;
+            z-index: 9;
         }
         
         .header {
             display: flex;
             align-items: center;
             margin-bottom: 25px;
+            margin-top: 9px;
         }
-        
+
         .flag {
             height: 40px;
             margin-right: 15px;
@@ -72,48 +124,12 @@
             text-align: center;
             position: relative;
             min-height: 120px;
-            overflow: hidden; /* Důležité pro omezení lišty */
+            overflow: hidden;
             display: flex;
             flex-direction: column;
             justify-content: center;
             align-items: center;
             box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
-        }
-
-        /* Nové styly pro odpočítávací lištu */
-        .update-countdown-bar {
-            position: absolute;
-            top: 0;
-            left: 0; /* Začátek zleva */
-            width: 0%; /* Počáteční šířka 0 */
-            height: 5px; /* Výška lišty */
-            background-color: var(--update-bar-color);
-            transform-origin: left; /* Důležité pro animaci šířky */
-            border-top-left-radius: 10px;
-            border-top-right-radius: 10px;
-            box-shadow: 0 0 10px var(--update-bar-glow-color), 0 0 20px var(--update-bar-glow-color); /* Efekt záře */
-        }
-
-        /* Animace pro jízdu zleva doprava (rychlé naplnění) */
-        @keyframes countdown-left-to-right {
-            from { width: 0%; }
-            to { width: 100%; }
-        }
-        
-        /* Animace pro odpočítávání zprava doleva */
-        @keyframes countdown-right-to-left {
-            from { width: 100%; }
-            to { width: 0%; }
-        }
-
-        /* Třída pro aktivaci animace zleva doprava */
-        .update-countdown-bar.restarting {
-            animation: countdown-left-to-right 0.6s ease-out forwards; /* Trvá 0.6s */
-        }
-
-        /* Třída pro aktivaci odpočítávací animace zprava doleva */
-        .update-countdown-bar.counting-down {
-            animation: countdown-right-to-left var(--update-interval) linear forwards;
         }
         
         .big-number {
@@ -123,7 +139,7 @@
             color: var(--accent);
             text-align: center;
             position: relative;
-            z-index: 2; /* Zajistí, že text je nad lištou */
+            z-index: 2;
         }
         
         .stat-label {
@@ -258,7 +274,6 @@
             color: var(--accent);
         }
         
-        /* Previous count bubble styles */
         .previous-count {
             position: absolute;
             font-size: 16px;
@@ -299,13 +314,18 @@
 </head>
 <body>
     <div class="dashboard">
+        <!-- Precision Loading Bar -->
+        <div class="loading-bar-container">
+            <div class="loading-bar" id="loading-bar"></div>
+        </div>
+        
         <div class="header">
             <img src="https://flagcdn.com/192x144/cz.png" class="flag" alt="Czech Flag">
             <h1>Czech Republic PopCat Clicks</h1>
         </div>
         
         <div class="main-stat" id="main-stat">
-            <div class="update-countdown-bar" id="update-countdown-bar"></div> <div class="big-number" id="click-count">0</div>
+            <div class="big-number" id="click-count">0</div>
             <div class="stat-label">Total Clicks</div>
             <div id="error-message" class="error-message"></div>
         </div>
@@ -365,9 +385,6 @@
         let historyChart = null;
         let countryRankings = [];
         let czPosition = 0;
-        // Interval aktualizace API (7 sekund)
-        const updateIntervalMs = 7000; 
-        const updateIntervalSec = updateIntervalMs / 1000; // pro CSS animaci
         
         // DOM elements
         const clickCountEl = document.getElementById('click-count');
@@ -381,10 +398,28 @@
         const competitorInfoEl = document.getElementById('competitor-info');
         const errorMessageEl = document.getElementById('error-message');
         const passContainerEl = document.getElementById('pass-container');
-        const updateCountdownBarEl = document.getElementById('update-countdown-bar'); 
+        const loadingBarEl = document.getElementById('loading-bar');
         
-        // Nastavení CSS proměnné pro animaci intervalu (dynamicky)
-        document.documentElement.style.setProperty('--update-interval', `${updateIntervalSec}s`);
+        // Precision loading bar control
+        let loadingBarTimeout;
+        const LOADING_DURATION = 7000; // 7 seconds in ms
+        
+        function resetLoadingBar() {
+            clearTimeout(loadingBarTimeout);
+            
+            loadingBarEl.classList.add('loading-bar-reset');
+            
+            setTimeout(() => {
+                loadingBarEl.style.animation = 'none';
+                loadingBarEl.classList.remove('loading-bar-reset');
+                void loadingBarEl.offsetWidth;
+                loadingBarEl.style.animation = `loadingProgress ${LOADING_DURATION}ms linear forwards`;
+                
+                loadingBarTimeout = setTimeout(() => {
+                    fetchCzechClicks();
+                }, LOADING_DURATION - 50);
+            }, 300);
+        }
 
         // Initialize chart
         const ctx = document.getElementById('historyChart').getContext('2d');
@@ -410,15 +445,11 @@
                         x: { display: false },
                         y: { 
                             display: true,
-                            grid: { color: 'rgba(255, 255, 255, 0.1)' }, /* Zjemnění mřížky */
-                            ticks: {
-                                color: 'var(--text-secondary)' /* Barva textu osy Y */
-                            }
+                            grid: { color: 'rgba(255, 255, 255, 0.1)' }
                         }
                     },
                     plugins: {
-                        legend: { display: false },
-                        tooltip: { enabled: false } /* Vypnutí tooltipů */
+                        legend: { display: false }
                     }
                 }
             });
@@ -432,19 +463,16 @@
             bubble.className = 'previous-count';
             bubble.textContent = `+${formatNumber(count)}`;
             
-            // Position above the main counter (top center)
             bubble.style.left = '50%';
             bubble.style.top = '20px';
             bubble.style.transform = 'translateX(-50%)';
             
             mainStatEl.appendChild(bubble);
             
-            // Show the bubble
             setTimeout(() => {
                 bubble.classList.add('show-previous');
             }, 50);
             
-            // Remove after animation
             setTimeout(() => {
                 bubble.classList.remove('show-previous');
                 setTimeout(() => {
@@ -477,7 +505,7 @@
         function updateAverages(pointsGained, secondsPassed) {
             if (secondsPassed > 0) {
                 const ratePerSecond = pointsGained / secondsPassed;
-                clicks1sEl.textContent = (Math.round(ratePerSecond * 10) / 10).toFixed(1); // 1 decimal place
+                clicks1sEl.textContent = (Math.round(ratePerSecond * 10) / 10).toFixed(1);
             }
         }
         
@@ -496,32 +524,27 @@
         
         // Update country ranking and competitor info
         function updateCountryRanking(data) {
-            // Convert to array and sort by clicks
             countryRankings = Object.keys(data).map(code => ({
                 code,
                 clicks: data[code]
             })).sort((a, b) => b.clicks - a.clicks);
             
-            // Find Czech Republic's position
             czPosition = countryRankings.findIndex(c => c.code === 'CZ');
             
             if (czPosition >= 0) {
                 const suffix = getNumberSuffix(czPosition + 1);
                 currentRankEl.textContent = `${czPosition + 1}${suffix}`;
                 
-                // Update competitor info
                 if (czPosition > 0) {
                     const competitor = countryRankings[czPosition - 1];
                     const clicksNeeded = competitor.clicks - data.CZ + 1;
                     clicksToPassEl.textContent = formatNumber(clicksNeeded);
                     
-                    // Add competitor flag and name
                     competitorInfoEl.innerHTML = `
                         <img src="https://flagcdn.com/24x18/${competitor.code.toLowerCase()}.png" class="small-flag" alt="${competitor.code}">
                         ${getCountryName(competitor.code)}
                     `;
                     
-                    // Highlight if we're close to passing
                     if (clicksNeeded < 100000) {
                         passContainerEl.style.backgroundColor = 'rgba(39, 174, 96, 0.2)';
                         passContainerEl.style.border = '1px solid var(--accent)';
@@ -578,129 +601,73 @@
         // Show error message
         function showError(message) {
             errorMessageEl.textContent = message;
-            // Zruší předchozí timer a nastaví nový
-            clearTimeout(errorMessageEl.dataset.timer); 
-            errorMessageEl.dataset.timer = setTimeout(() => {
+            setTimeout(() => {
                 errorMessageEl.textContent = '';
             }, 5000);
-        }
-
-        // Restart animace odpočítávací lišty (jede zleva doprava a pak odpočítává)
-        function restartCountdownBar() {
-            // Nejprve odstraníme všechny animace
-            updateCountdownBarEl.style.animation = 'none';
-            // Nastavíme šířku na 0%, aby se vizuálně "resetovala"
-            updateCountdownBarEl.style.width = '0%';
-            
-            // Vynutíme reflow, aby prohlížeč "viděl" předchozí změny před spuštěním nové animace
-            // Toto je klíčové pro správné zresetování animace
-            void updateCountdownBarEl.offsetWidth; 
-
-            // 1. Spustíme animaci naplnění zleva doprava (0.6s)
-            updateCountdownBarEl.classList.add('restarting');
-            
-            // 2. Po dokončení animace naplnění, spustíme animaci odpočítávání
-            setTimeout(() => {
-                updateCountdownBarEl.classList.remove('restarting'); // Odstraníme třídu pro naplnění
-                updateCountdownBarEl.classList.add('counting-down'); // Přidáme třídu pro odpočítávání
-            }, 600); // Doba trvání 'restarting' animace
         }
         
         // Fetch data from API
         async function fetchCzechClicks() {
-            let response;
             try {
-                const apiUrl = 'https://leaderboard.popcat.click/'; 
+                resetLoadingBar(); // Reset with precision timing
                 
-                // Zkusíme nejdříve přímý fetch
+                const apiUrl = 'https://leaderboard.popcat.click/';
+                let response;
+                
                 try {
-                    response = await fetch(apiUrl); 
-                    
-                    // Kontrola content-type, pokud je HTML, pravděpodobně jde o blokaci
+                    response = await fetch(apiUrl);
                     const contentType = response.headers.get('content-type');
                     if (contentType && contentType.includes('text/html')) {
-                        throw new Error('Direct fetch returned HTML, likely CORS issue or blocking by server. Trying proxy...');
-                    }
-                    if (!response.ok) {
-                         throw new Error(`HTTP error! Status: ${response.status}. Trying proxy...`);
+                        throw new Error('Direct fetch returned HTML');
                     }
                 } catch (directError) {
-                    showError("Přímé připojení k API selhalo. Zkouším přes proxy...");
-
-                    // Pokud přímý fetch selže, zkusíme proxy
-                    // Použijeme corsproxy.io, která se zatím zdá být funkční (i když nemusí být trvale)
-                    const proxyUrl = 'https://corsproxy.io/?'; 
-                    response = await fetch(proxyUrl + encodeURIComponent(apiUrl)); 
+                    const proxyUrl = 'https://api.codetabs.com/v1/proxy/?quest=';
+                    response = await fetch(proxyUrl + encodeURIComponent(apiUrl));
+                }
+                
+                if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
+                
+                const data = await response.json();
+                
+                if (!data || !data.CZ) {
+                    throw new Error('Invalid data format from API');
+                }
+                
+                const newCount = data.CZ;
+                const now = new Date();
+                
+                updateCountryRanking(data);
+                
+                if (lastCount > 0) {
+                    const timeDiff = (now - lastUpdateTime) / 1000;
+                    const pointsGained = newCount - lastCount;
+                    updateAverages(pointsGained, timeDiff);
                     
-                    if (!response.ok) {
-                        // Přesnější chybová zpráva pro proxy
-                        if (response.status === 429) {
-                            throw new Error('Proxy také selhala (429 Too Many Requests). API pravděpodobně blokuje přístup.');
-                        }
-                        throw new Error(`Proxy fetch HTTP error! Status: ${response.status}.`);
+                    if (pointsGained > 0) {
+                        createPreviousCountBubble(pointsGained);
                     }
                 }
                 
-                // Zde zkusíme parsovat JSON. Pokud to selže, je to kvůli neplatnému JSON (např. HTML)
-                const data = await response.json(); 
+                previousCount = lastCount;
+                lastCount = newCount;
+                lastUpdateTime = now;
                 
-                if (!data || typeof data !== 'object' || !data.CZ) { 
-                    throw new Error('Invalid data format from API (missing CZ data or not an object).');
-                }
-                
-                const newCount = data.CZ; 
-                const now = new Date(); 
-                
-                updateCountryRanking(data); 
-                
-                if (lastCount > 0) { 
-                    const timeDiff = (now - lastUpdateTime) / 1000; 
-                    const pointsGained = newCount - lastCount; 
-                    updateAverages(pointsGained, timeDiff); 
-                    
-                    if (pointsGained > 0) { 
-                        createPreviousCountBubble(pointsGained); 
-                    }
-                }
-                
-                previousCount = lastCount; 
-                lastCount = newCount; 
-                lastUpdateTime = now; 
-                
-                clickCountEl.textContent = formatNumber(newCount); 
-                updateProgress(newCount); 
-                updateChart(newCount); 
-                
-                // Restart animace po úspěšné aktualizaci
-                restartCountdownBar(); 
-                errorMessageEl.textContent = ''; // Vyčistí chybu po úspěšné aktualizaci
+                clickCountEl.textContent = formatNumber(newCount);
+                updateProgress(newCount);
+                updateChart(newCount);
                 
             } catch (error) {
-                console.error('Chyba při načítání dat:', error);
-                // Vizuálně resetujeme pruh i při chybě, aby se cyklus opakoval
-                restartCountdownBar(); 
-
-                // Zobrazíme konkrétnější chybovou zprávu
-                if (error.message.includes('429')) {
-                    showError("Překročen limit požadavků. PopCat API blokuje přístup. (Error 429)");
-                } else if (error.message.includes('CORS') || error.message.includes('HTML')) {
-                    showError("Chyba: API blokuje přímé připojení. Zkouším přes proxy, ale může být také blokována.");
-                } else if (error.message.includes('Failed to fetch') || error.message.includes('TypeError')) {
-                    showError("Chyba připojení (síť/proxy problém). Opakuji...");
-                } else if (error.message.includes('SyntaxError: Unexpected token')) { // Zachytí chybu s HTML místo JSON
-                    showError("Chyba: API vrátilo neplatná data (pravděpodobně je blokováno a poslalo HTML stránku).");
-                }
-                else {
-                    showError(`Neznámá chyba při aktualizaci: ${error.message}.`);
-                }
+                console.error('Error fetching data:', error);
+                showError(`Error updating data. Retrying...`);
+                resetLoadingBar(); // Ensure loading bar continues even on error
             }
         }
         
         // Initialize
-        let lastUpdateTime = null; 
-        initChart(); 
-        fetchCzechClicks(); // První fetch hned po načtení 
-        setInterval(fetchCzechClicks, updateIntervalMs); 
+        let lastUpdateTime = null;
+        initChart();
+        resetLoadingBar(); // Start the precision loading bar
+        fetchCzechClicks(); // Initial data load
     </script>
 </body>
 </html>
