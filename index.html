@@ -1,409 +1,706 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Czech Republic PopCat Clicks</title>
-  <style>
-    :root {
-      --primary: #1a1a1a;
-      --secondary: #252525;
-      --accent: #27ae60;
-      --text: #e0e0e0;
-      --text-secondary: #a0a0a0;
-    }
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Czech Republic PopCat Clicks</title>
+    <style>
+        :root {
+            --primary: #1a1a1a;
+            --secondary: #252525;
+            --accent: #27ae60;
+            --text: #e0e0e0;
+            --text-secondary: #a0a0a0;
+            /* Nové proměnné pro pruh */
+            --update-bar-color: #27ae60; /* Zelená barva lišty (stejná jako accent) */
+            --update-bar-glow-color: rgba(39, 174, 96, 0.7); /* Světlejší zelená pro záři */
+            --update-interval: 7s; /* Výchozí hodnota, bude přepsána JS */
+        }
+        
+        body {
+            font-family: Roboto, sans-serif;
+            background-color: var(--primary);
+            color: var(--text);
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+            min-height: 100vh;
+        }
+        
+        .dashboard {
+            width: 100%;
+            max-width: 500px;
+            background-color: var(--secondary);
+            border-radius: 12px;
+            padding: 25px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+            position: relative;
+        }
+        
+        .header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 25px;
+        }
+        
+        .flag {
+            height: 40px;
+            margin-right: 15px;
+            border-radius: 4px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+        }
+        
+        .small-flag {
+            height: 20px;
+            margin-right: 8px;
+            border-radius: 2px;
+            vertical-align: middle;
+        }
+        
+        h1 {
+            margin: 0;
+            font-size: 24px;
+            font-weight: 600;
+        }
+        
+        .main-stat {
+            background-color: rgba(0, 0, 0, 0.2);
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 15px;
+            text-align: center;
+            position: relative;
+            min-height: 120px;
+            overflow: hidden; /* Důležité pro omezení lišty */
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+        }
 
-    body {
-      font-family: Roboto, sans-serif;
-      background-color: var(--primary);
-      color: var(--text);
-      margin: 0;
-      padding: 20px;
-      display: flex;
-      justify-content: center;
-      min-height: 100vh;
-    }
+        /* Nové styly pro odpočítávací lištu */
+        .update-countdown-bar {
+            position: absolute;
+            top: 0;
+            left: 0; /* Začátek zleva */
+            width: 0%; /* Počáteční šířka 0 */
+            height: 5px; /* Výška lišty */
+            background-color: var(--update-bar-color);
+            transform-origin: left; /* Důležité pro animaci šířky */
+            border-top-left-radius: 10px;
+            border-top-right-radius: 10px;
+            box-shadow: 0 0 10px var(--update-bar-glow-color), 0 0 20px var(--update-bar-glow-color); /* Efekt záře */
+        }
 
-    .dashboard {
-      width: 100%;
-      max-width: 500px;
-      background-color: var(--secondary);
-      border-radius: 12px;
-      padding: 25px;
-      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
-      position: relative;
-    }
+        /* Animace pro jízdu zleva doprava (rychlé naplnění) */
+        @keyframes countdown-left-to-right {
+            from { width: 0%; }
+            to { width: 100%; }
+        }
+        
+        /* Animace pro odpočítávání zprava doleva */
+        @keyframes countdown-right-to-left {
+            from { width: 100%; }
+            to { width: 0%; }
+        }
 
-    .header {
-      display: flex;
-      align-items: center;
-      margin-bottom: 25px;
-    }
+        /* Třída pro aktivaci animace zleva doprava */
+        .update-countdown-bar.restarting {
+            animation: countdown-left-to-right 0.6s ease-out forwards; /* Trvá 0.6s */
+        }
 
-    .flag {
-      height: 40px;
-      margin-right: 15px;
-      border-radius: 4px;
-      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
-    }
-
-    h1 {
-      margin: 0;
-      font-size: 24px;
-      font-weight: 600;
-    }
-
-    .main-stat {
-      background-color: rgba(0, 0, 0, 0.2);
-      border-radius: 10px;
-      padding: 20px;
-      margin-bottom: 20px;
-      text-align: center;
-      position: relative;
-      min-height: 120px;
-      overflow: hidden;
-      display: flex;
-      flex-direction: column;
-      justify-content: center;
-      align-items: center;
-    }
-
-    .big-number {
-      font-size: 42px;
-      font-weight: 700;
-      margin: 10px 0;
-      color: var(--accent);
-      text-align: center;
-      position: relative;
-      z-index: 2;
-    }
-
-    .stat-label {
-      font-size: 14px;
-      color: var(--text-secondary);
-      text-transform: uppercase;
-      letter-spacing: 1px;
-      position: relative;
-      z-index: 2;
-    }
-
-    .stats-grid {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 15px;
-      margin-bottom: 20px;
-    }
-
-    .stat-card {
-      background-color: rgba(0, 0, 0, 0.2);
-      border-radius: 8px;
-      padding: 15px;
-      text-align: center;
-    }
-
-    .stat-number {
-      font-size: 24px;
-      font-weight: 600;
-      margin: 5px 0;
-    }
-
-    .progress-container {
-      margin-top: 25px;
-    }
-
-    .progress-label {
-      display: flex;
-      justify-content: space-between;
-      margin-bottom: 8px;
-      font-size: 14px;
-    }
-
-    .progress-bar {
-      height: 8px;
-      background-color: rgba(255, 255, 255, 0.1);
-      border-radius: 4px;
-      overflow: hidden;
-    }
-
-    .progress-fill {
-      height: 100%;
-      background-color: var(--accent);
-      width: 0%;
-      transition: width 0.5s ease;
-    }
-
-    .chart-container {
-      margin-top: 30px;
-      height: 200px;
-      position: relative;
-    }
-
-    .options {
-      margin-top: 25px;
-      border-top: 1px solid rgba(255, 255, 255, 0.1);
-      padding-top: 15px;
-    }
-
-    .option-btn {
-      background: none;
-      border: none;
-      color: var(--text);
-      font-size: 14px;
-      margin-right: 15px;
-      cursor: pointer;
-      padding: 5px 0;
-    }
-
-    .option-btn:hover {
-      color: var(--accent);
-    }
-
-    .previous-count {
-      position: absolute;
-      font-size: 16px;
-      color: rgba(255, 255, 255, 0.7);
-      background-color: rgba(39, 174, 96, 0.2);
-      padding: 5px 10px;
-      border-radius: 20px;
-      white-space: nowrap;
-      pointer-events: none;
-      opacity: 0;
-      transition: opacity 0.3s;
-      animation: float 6s infinite ease-in-out;
-      z-index: 1;
-    }
-
-    @keyframes float {
-      0%, 100% {
-        transform: translateY(0) rotate(0deg);
-      }
-      50% {
-        transform: translateY(-10px) rotate(5deg);
-      }
-    }
-
-    .show-previous {
-      opacity: 1;
-    }
-  </style>
+        /* Třída pro aktivaci odpočítávací animace zprava doleva */
+        .update-countdown-bar.counting-down {
+            animation: countdown-right-to-left var(--update-interval) linear forwards;
+        }
+        
+        .big-number {
+            font-size: 42px;
+            font-weight: 700;
+            margin: 10px 0;
+            color: var(--accent);
+            text-align: center;
+            position: relative;
+            z-index: 2; /* Zajistí, že text je nad lištou */
+        }
+        
+        .stat-label {
+            font-size: 14px;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            position: relative;
+            z-index: 2;
+        }
+        
+        .stats-container {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+        
+        .pass-container {
+            background-color: rgba(39, 174, 96, 0.1);
+            border: 1px solid var(--accent);
+            border-radius: 8px;
+            padding: 15px;
+            text-align: center;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+        
+        .pass-container:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 6px 15px rgba(39, 174, 96, 0.3);
+        }
+        
+        .row-container {
+            display: flex;
+            gap: 15px;
+        }
+        
+        .stat-card {
+            flex: 1;
+            background-color: rgba(0, 0, 0, 0.2);
+            border-radius: 8px;
+            padding: 15px;
+            text-align: center;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+        
+        .stat-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 6px 15px rgba(0, 0, 0, 0.3);
+        }
+        
+        .goal-container {
+            background-color: rgba(0, 0, 0, 0.2);
+            border-radius: 8px;
+            padding: 15px;
+            text-align: center;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+        
+        .goal-container:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 6px 15px rgba(0, 0, 0, 0.3);
+        }
+        
+        .stat-number {
+            font-size: 24px;
+            font-weight: 600;
+            margin: 5px 0;
+        }
+        
+        .competitor-info {
+            font-size: 14px;
+            margin-top: 5px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .progress-container {
+            margin-top: 25px;
+        }
+        
+        .progress-label {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 8px;
+            font-size: 14px;
+        }
+        
+        .progress-bar {
+            height: 8px;
+            background-color: rgba(255, 255, 255, 0.1);
+            border-radius: 4px;
+            overflow: hidden;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+        }
+        
+        .progress-fill {
+            height: 100%;
+            background-color: var(--accent);
+            width: 0%;
+            transition: width 0.5s ease;
+        }
+        
+        .chart-container {
+            margin-top: 30px;
+            height: 200px;
+            position: relative;
+        }
+        
+        .options {
+            margin-top: 25px;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            padding-top: 15px;
+        }
+        
+        .option-btn {
+            background: none;
+            border: none;
+            color: var(--text);
+            font-size: 14px;
+            margin-right: 15px;
+            cursor: pointer;
+            padding: 5px 0;
+            transition: color 0.2s ease;
+        }
+        
+        .option-btn:hover {
+            color: var(--accent);
+        }
+        
+        /* Previous count bubble styles */
+        .previous-count {
+            position: absolute;
+            font-size: 16px;
+            color: var(--accent);
+            background-color: rgba(39, 174, 96, 0.2);
+            padding: 5px 10px;
+            border-radius: 20px;
+            white-space: nowrap;
+            pointer-events: none;
+            opacity: 0;
+            transition: opacity 0.3s;
+            animation: float 4s infinite ease-in-out;
+            z-index: 3;
+            font-weight: bold;
+            text-shadow: 0 0 5px rgba(0, 0, 0, 0.5);
+        }
+        
+        @keyframes float {
+            0%, 100% {
+                transform: translateY(0) rotate(0deg);
+            }
+            50% {
+                transform: translateY(-8px) rotate(3deg);
+            }
+        }
+        
+        .show-previous {
+            opacity: 1;
+        }
+        
+        .error-message {
+            color: #ff6b6b;
+            font-size: 14px;
+            margin-top: 10px;
+            text-align: center;
+        }
+    </style>
 </head>
 <body>
-  <div class="dashboard">
-    <div class="header">
-      <img src="https://flagcdn.com/192x144/cz.png" class="flag" alt="Czech Flag">
-      <h1>Czech Republic PopCat Clicks</h1>
+    <div class="dashboard">
+        <div class="header">
+            <img src="https://flagcdn.com/192x144/cz.png" class="flag" alt="Czech Flag">
+            <h1>Czech Republic PopCat Clicks</h1>
+        </div>
+        
+        <div class="main-stat" id="main-stat">
+            <div class="update-countdown-bar" id="update-countdown-bar"></div> <div class="big-number" id="click-count">0</div>
+            <div class="stat-label">Total Clicks</div>
+            <div id="error-message" class="error-message"></div>
+        </div>
+        
+        <div class="stats-container">
+            <div class="pass-container" id="pass-container">
+                <div class="stat-number" id="clicks-to-pass">-</div>
+                <div class="stat-label">To Pass Next Country</div>
+                <div class="competitor-info" id="competitor-info"></div>
+            </div>
+            
+            <div class="row-container">
+                <div class="stat-card">
+                    <div class="stat-number" id="current-rank">-</div>
+                    <div class="stat-label">Current Rank</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number" id="clicks-1s">0</div>
+                    <div class="stat-label">Clicks / Second</div>
+                </div>
+            </div>
+            
+            <div class="goal-container">
+                <div class="stat-number" id="next-goal">1,000,000</div>
+                <div class="stat-label">To Next Million</div>
+            </div>
+        </div>
+        
+        <div class="progress-container">
+            <div class="progress-label">
+                <span>Progress to next million</span>
+                <span id="progress-percent">0%</span>
+            </div>
+            <div class="progress-bar">
+                <div class="progress-fill" id="progress-fill"></div>
+            </div>
+        </div>
+        
+        <div class="chart-container">
+            <canvas id="historyChart"></canvas>
+        </div>
+        
+        <div class="options">
+            <button class="option-btn">Change Country</button>
+            <button class="option-btn">Visit PopCat</button>
+            <button class="option-btn">Compare</button>
+        </div>
     </div>
 
-    <div class="main-stat" id="main-stat">
-      <div class="big-number" id="click-count">0</div>
-      <div class="stat-label">Total Clicks</div>
-    </div>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script>
+        // Data tracking
+        let lastCount = 0;
+        let previousCount = 0;
+        let historyData = [];
+        const maxHistoryPoints = 30;
+        let historyChart = null;
+        let countryRankings = [];
+        let czPosition = 0;
+        // Interval aktualizace API (7 sekund)
+        const updateIntervalMs = 7000; 
+        const updateIntervalSec = updateIntervalMs / 1000; // pro CSS animaci
+        
+        // DOM elements
+        const clickCountEl = document.getElementById('click-count');
+        const clicks1sEl = document.getElementById('clicks-1s');
+        const progressFillEl = document.getElementById('progress-fill');
+        const progressPercentEl = document.getElementById('progress-percent');
+        const mainStatEl = document.getElementById('main-stat');
+        const nextGoalEl = document.getElementById('next-goal');
+        const currentRankEl = document.getElementById('current-rank');
+        const clicksToPassEl = document.getElementById('clicks-to-pass');
+        const competitorInfoEl = document.getElementById('competitor-info');
+        const errorMessageEl = document.getElementById('error-message');
+        const passContainerEl = document.getElementById('pass-container');
+        const updateCountdownBarEl = document.getElementById('update-countdown-bar'); 
+        
+        // Nastavení CSS proměnné pro animaci intervalu (dynamicky)
+        document.documentElement.style.setProperty('--update-interval', `${updateIntervalSec}s`);
 
-    <div class="stats-grid">
-      <div class="stat-card">
-        <div class="stat-number" id="current-rank">-</div>
-        <div class="stat-label">Current Rank</div>
-      </div>
-      <div class="stat-card">
-        <div class="stat-number" id="next-goal">1,000,000</div>
-        <div class="stat-label">To Next Million</div>
-      </div>
-      <div class="stat-card">
-        <div class="stat-number" id="clicks-1m">0</div>
-        <div class="stat-label">Avg / 1 Min</div>
-      </div>
-      <div class="stat-card">
-        <div class="stat-number" id="clicks-1h">0</div>
-        <div class="stat-label">Avg / 1 Hr</div>
-      </div>
-    </div>
-
-    <div class="progress-container">
-      <div class="progress-label">
-        <span>Progress to next million</span>
-        <span id="progress-percent">0%</span>
-      </div>
-      <div class="progress-bar">
-        <div class="progress-fill" id="progress-fill"></div>
-      </div>
-    </div>
-
-    <div class="chart-container">
-      <canvas id="historyChart"></canvas>
-    </div>
-
-    <div class="options">
-      <button class="option-btn">Change Country</button>
-      <button class="option-btn">Visit PopCat</button>
-      <button class="option-btn">Compare</button>
-    </div>
-  </div>
-
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-  <script>
-    let lastCount = 0;
-    let previousCount = 0;
-    let historyData = [];
-    const maxHistoryPoints = 30;
-    let historyChart = null;
-    let countryRankings = {};
-
-    const clickCountEl = document.getElementById('click-count');
-    const clicks1mEl = document.getElementById('clicks-1m');
-    const clicks1hEl = document.getElementById('clicks-1h');
-    const progressFillEl = document.getElementById('progress-fill');
-    const progressPercentEl = document.getElementById('progress-percent');
-    const mainStatEl = document.getElementById('main-stat');
-    const nextGoalEl = document.getElementById('next-goal');
-    const currentRankEl = document.getElementById('current-rank');
-
-    const ctx = document.getElementById('historyChart').getContext('2d');
-    function initChart() {
-      historyChart = new Chart(ctx, {
-        type: 'line',
-        data: {
-          labels: Array(maxHistoryPoints).fill(''),
-          datasets: [{
-            data: historyData,
-            borderColor: '#27ae60',
-            backgroundColor: 'rgba(39, 174, 96, 0.1)',
-            borderWidth: 2,
-            fill: true,
-            tension: 0.4,
-            pointRadius: 0
-          }]
-        },
-        options: {
-          responsive: true,
-          maintainAspectRatio: false,
-          scales: {
-            x: { display: false },
-            y: {
-              display: true,
-              grid: { color: 'rgba(255, 255, 255, 0.1)' }
+        // Initialize chart
+        const ctx = document.getElementById('historyChart').getContext('2d');
+        function initChart() {
+            historyChart = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: Array(maxHistoryPoints).fill(''),
+                    datasets: [{
+                        data: historyData,
+                        borderColor: '#27ae60',
+                        backgroundColor: 'rgba(39, 174, 96, 0.1)',
+                        borderWidth: 2,
+                        fill: true,
+                        tension: 0.4,
+                        pointRadius: 0
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        x: { display: false },
+                        y: { 
+                            display: true,
+                            grid: { color: 'rgba(255, 255, 255, 0.1)' }, /* Zjemnění mřížky */
+                            ticks: {
+                                color: 'var(--text-secondary)' /* Barva textu osy Y */
+                            }
+                        }
+                    },
+                    plugins: {
+                        legend: { display: false },
+                        tooltip: { enabled: false } /* Vypnutí tooltipů */
+                    }
+                }
+            });
+        }
+        
+        // Create a floating previous count bubble
+        function createPreviousCountBubble(count) {
+            if (count === 0) return;
+            
+            const bubble = document.createElement('div');
+            bubble.className = 'previous-count';
+            bubble.textContent = `+${formatNumber(count)}`;
+            
+            // Position above the main counter (top center)
+            bubble.style.left = '50%';
+            bubble.style.top = '20px';
+            bubble.style.transform = 'translateX(-50%)';
+            
+            mainStatEl.appendChild(bubble);
+            
+            // Show the bubble
+            setTimeout(() => {
+                bubble.classList.add('show-previous');
+            }, 50);
+            
+            // Remove after animation
+            setTimeout(() => {
+                bubble.classList.remove('show-previous');
+                setTimeout(() => {
+                    if (bubble.parentNode) {
+                        bubble.parentNode.removeChild(bubble);
+                    }
+                }, 300);
+            }, 3000);
+        }
+        
+        // Update chart with new data
+        function updateChart(newValue) {
+            historyData.push(newValue);
+            if (historyData.length > maxHistoryPoints) {
+                historyData.shift();
             }
-          },
-          plugins: {
-            legend: { display: false }
-          }
+            
+            if (historyChart) {
+                historyChart.data.datasets[0].data = historyData;
+                historyChart.update();
+            }
         }
-      });
-    }
-
-    function createPreviousCountBubble(count) {
-      if (count === 0) return;
-
-      const bubble = document.createElement('div');
-      bubble.className = 'previous-count';
-      bubble.textContent = `+${formatNumber(count)}`;
-
-      const rect = mainStatEl.getBoundingClientRect();
-      const padding = 30;
-
-      const x = Math.floor(Math.random() * (rect.width - padding * 2)) + padding;
-      const y = Math.floor(Math.random() * (rect.height - padding * 2)) + padding;
-
-      bubble.style.left = `${x}px`;
-      bubble.style.top = `${y}px`;
-      bubble.style.transform = `rotate(${Math.floor(Math.random() * 15) - 7}deg)`;
-
-      mainStatEl.appendChild(bubble);
-
-      setTimeout(() => bubble.classList.add('show-previous'), 50);
-      setTimeout(() => {
-        bubble.classList.remove('show-previous');
-        setTimeout(() => {
-          if (bubble.parentNode) bubble.parentNode.removeChild(bubble);
-        }, 300);
-      }, 3000);
-    }
-
-    function updateChart(newValue) {
-      historyData.push(newValue);
-      if (historyData.length > maxHistoryPoints) historyData.shift();
-      if (historyChart) {
-        historyChart.data.datasets[0].data = historyData;
-        historyChart.update();
-      }
-    }
-
-    function formatNumber(num) {
-      return num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
-    }
-
-    function updateAverages(pointsGained, secondsPassed) {
-      if (secondsPassed > 0) {
-        const rate = pointsGained / secondsPassed;
-        clicks1mEl.textContent = formatNumber(Math.round(rate * 60));
-        clicks1hEl.textContent = formatNumber(Math.round(rate * 3600));
-      }
-    }
-
-    function updateProgress(current) {
-      const currentMillion = Math.floor(current / 1_000_000);
-      const nextGoal = 1_000_000 * (currentMillion + 1);
-      const remaining = nextGoal - current;
-
-      nextGoalEl.textContent = formatNumber(remaining);
-      const progress = (current % 1_000_000) / 1_000_000 * 100;
-      progressFillEl.style.width = `${progress}%`;
-      progressPercentEl.textContent = `${Math.round(progress)}%`;
-    }
-
-    function updateCountryRanking(data) {
-      const countries = Object.keys(data).map(code => ({ code, clicks: data[code] }));
-      countries.sort((a, b) => b.clicks - a.clicks);
-      const czIndex = countries.findIndex(c => c.code === 'CZ');
-      if (czIndex >= 0) {
-        currentRankEl.textContent = `${czIndex + 1}${getNumberSuffix(czIndex + 1)}`;
-      }
-      countryRankings = countries;
-    }
-
-    function getNumberSuffix(num) {
-      if (num >= 11 && num <= 13) return 'th';
-      switch (num % 10) {
-        case 1: return 'st';
-        case 2: return 'nd';
-        case 3: return 'rd';
-        default: return 'th';
-      }
-    }
-
-    async function fetchCzechClicks() {
-      try {
-        const proxyUrl = 'https://api.codetabs.com/v1/proxy/?quest=';
-        const apiUrl = 'https://leaderboard.popcat.click/';
-        const response = await fetch(proxyUrl + encodeURIComponent(apiUrl));
-        if (!response.ok) throw new Error('Network error');
-        const data = await response.json();
-
-        if (data && data.CZ) {
-          const newCount = data.CZ;
-          const now = new Date();
-          updateCountryRanking(data);
-          if (lastCount > 0) {
-            const diff = (now - lastUpdateTime) / 1000;
-            const gained = newCount - lastCount;
-            updateAverages(gained, diff);
-            if (gained > 0) createPreviousCountBubble(gained);
-          }
-          previousCount = lastCount;
-          lastCount = newCount;
-          lastUpdateTime = now;
-          clickCountEl.textContent = formatNumber(newCount);
-          updateProgress(newCount);
-          updateChart(newCount);
+        
+        // Format numbers with commas
+        function formatNumber(num) {
+            return num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
         }
-      } catch (error) {
-        console.error('Error fetching data:', error);
-      }
-    }
+        
+        // Calculate and update averages
+        function updateAverages(pointsGained, secondsPassed) {
+            if (secondsPassed > 0) {
+                const ratePerSecond = pointsGained / secondsPassed;
+                clicks1sEl.textContent = (Math.round(ratePerSecond * 10) / 10).toFixed(1); // 1 decimal place
+            }
+        }
+        
+        // Update progress bar and next goal countdown
+        function updateProgress(current) {
+            const currentMillion = Math.floor(current / 1000000);
+            const nextGoal = 1000000 * (currentMillion + 1);
+            const remaining = nextGoal - current;
+            
+            nextGoalEl.textContent = formatNumber(remaining);
+            
+            const progress = (current % 1000000) / 1000000 * 100;
+            progressFillEl.style.width = `${progress}%`;
+            progressPercentEl.textContent = `${Math.round(progress)}%`;
+        }
+        
+        // Update country ranking and competitor info
+        function updateCountryRanking(data) {
+            // Convert to array and sort by clicks
+            countryRankings = Object.keys(data).map(code => ({
+                code,
+                clicks: data[code]
+            })).sort((a, b) => b.clicks - a.clicks);
+            
+            // Find Czech Republic's position
+            czPosition = countryRankings.findIndex(c => c.code === 'CZ');
+            
+            if (czPosition >= 0) {
+                const suffix = getNumberSuffix(czPosition + 1);
+                currentRankEl.textContent = `${czPosition + 1}${suffix}`;
+                
+                // Update competitor info
+                if (czPosition > 0) {
+                    const competitor = countryRankings[czPosition - 1];
+                    const clicksNeeded = competitor.clicks - data.CZ + 1;
+                    clicksToPassEl.textContent = formatNumber(clicksNeeded);
+                    
+                    // Add competitor flag and name
+                    competitorInfoEl.innerHTML = `
+                        <img src="https://flagcdn.com/24x18/${competitor.code.toLowerCase()}.png" class="small-flag" alt="${competitor.code}">
+                        ${getCountryName(competitor.code)}
+                    `;
+                    
+                    // Highlight if we're close to passing
+                    if (clicksNeeded < 100000) {
+                        passContainerEl.style.backgroundColor = 'rgba(39, 174, 96, 0.2)';
+                        passContainerEl.style.border = '1px solid var(--accent)';
+                    } else {
+                        passContainerEl.style.backgroundColor = 'rgba(39, 174, 96, 0.1)';
+                    }
+                } else {
+                    clicksToPassEl.textContent = "1st";
+                    competitorInfoEl.textContent = "You're #1!";
+                    passContainerEl.style.backgroundColor = 'rgba(39, 174, 96, 0.3)';
+                }
+            }
+        }
+        
+        // Get country name from country code
+        function getCountryName(code) {
+            const countryNames = {
+                'CZ': 'Czech Republic',
+                'US': 'United States',
+                'GB': 'United Kingdom',
+                'DE': 'Germany',
+                'FR': 'France',
+                'ES': 'Spain',
+                'IT': 'Italy',
+                'PL': 'Poland',
+                'BR': 'Brazil',
+                'CA': 'Canada',
+                'AU': 'Australia',
+                'JP': 'Japan',
+                'KR': 'South Korea',
+                'IN': 'India',
+                'RU': 'Russia',
+                'TR': 'Turkey',
+                'NL': 'Netherlands',
+                'SE': 'Sweden',
+                'FI': 'Finland',
+                'NO': 'Norway',
+                'DK': 'Denmark'
+            };
+            return countryNames[code] || code;
+        }
+        
+        // Get ordinal suffix for numbers
+        function getNumberSuffix(num) {
+            if (num >= 11 && num <= 13) return 'th';
+            switch (num % 10) {
+                case 1: return 'st';
+                case 2: return 'nd';
+                case 3: return 'rd';
+                default: return 'th';
+            }
+        }
+        
+        // Show error message
+        function showError(message) {
+            errorMessageEl.textContent = message;
+            // Zruší předchozí timer a nastaví nový
+            clearTimeout(errorMessageEl.dataset.timer); 
+            errorMessageEl.dataset.timer = setTimeout(() => {
+                errorMessageEl.textContent = '';
+            }, 5000);
+        }
 
-    let lastUpdateTime = null;
-    initChart();
-    fetchCzechClicks();
-    setInterval(fetchCzechClicks, 5000);
-  </script>
+        // Restart animace odpočítávací lišty (jede zleva doprava a pak odpočítává)
+        function restartCountdownBar() {
+            // Nejprve odstraníme všechny animace
+            updateCountdownBarEl.style.animation = 'none';
+            // Nastavíme šířku na 0%, aby se vizuálně "resetovala"
+            updateCountdownBarEl.style.width = '0%';
+            
+            // Vynutíme reflow, aby prohlížeč "viděl" předchozí změny před spuštěním nové animace
+            // Toto je klíčové pro správné zresetování animace
+            void updateCountdownBarEl.offsetWidth; 
+
+            // 1. Spustíme animaci naplnění zleva doprava (0.6s)
+            updateCountdownBarEl.classList.add('restarting');
+            
+            // 2. Po dokončení animace naplnění, spustíme animaci odpočítávání
+            setTimeout(() => {
+                updateCountdownBarEl.classList.remove('restarting'); // Odstraníme třídu pro naplnění
+                updateCountdownBarEl.classList.add('counting-down'); // Přidáme třídu pro odpočítávání
+            }, 600); // Doba trvání 'restarting' animace
+        }
+        
+        // Fetch data from API
+        async function fetchCzechClicks() {
+            let response;
+            try {
+                const apiUrl = 'https://leaderboard.popcat.click/'; 
+                
+                // Zkusíme nejdříve přímý fetch
+                try {
+                    response = await fetch(apiUrl); 
+                    
+                    // Kontrola content-type, pokud je HTML, pravděpodobně jde o blokaci
+                    const contentType = response.headers.get('content-type');
+                    if (contentType && contentType.includes('text/html')) {
+                        throw new Error('Direct fetch returned HTML, likely CORS issue or blocking by server. Trying proxy...');
+                    }
+                    if (!response.ok) {
+                         throw new Error(`HTTP error! Status: ${response.status}. Trying proxy...`);
+                    }
+                } catch (directError) {
+                    showError("Přímé připojení k API selhalo. Zkouším přes proxy...");
+
+                    // Pokud přímý fetch selže, zkusíme proxy
+                    // Použijeme corsproxy.io, která se zatím zdá být funkční (i když nemusí být trvale)
+                    const proxyUrl = 'https://corsproxy.io/?'; 
+                    response = await fetch(proxyUrl + encodeURIComponent(apiUrl)); 
+                    
+                    if (!response.ok) {
+                        // Přesnější chybová zpráva pro proxy
+                        if (response.status === 429) {
+                            throw new Error('Proxy také selhala (429 Too Many Requests). API pravděpodobně blokuje přístup.');
+                        }
+                        throw new Error(`Proxy fetch HTTP error! Status: ${response.status}.`);
+                    }
+                }
+                
+                // Zde zkusíme parsovat JSON. Pokud to selže, je to kvůli neplatnému JSON (např. HTML)
+                const data = await response.json(); 
+                
+                if (!data || typeof data !== 'object' || !data.CZ) { 
+                    throw new Error('Invalid data format from API (missing CZ data or not an object).');
+                }
+                
+                const newCount = data.CZ; 
+                const now = new Date(); 
+                
+                updateCountryRanking(data); 
+                
+                if (lastCount > 0) { 
+                    const timeDiff = (now - lastUpdateTime) / 1000; 
+                    const pointsGained = newCount - lastCount; 
+                    updateAverages(pointsGained, timeDiff); 
+                    
+                    if (pointsGained > 0) { 
+                        createPreviousCountBubble(pointsGained); 
+                    }
+                }
+                
+                previousCount = lastCount; 
+                lastCount = newCount; 
+                lastUpdateTime = now; 
+                
+                clickCountEl.textContent = formatNumber(newCount); 
+                updateProgress(newCount); 
+                updateChart(newCount); 
+                
+                // Restart animace po úspěšné aktualizaci
+                restartCountdownBar(); 
+                errorMessageEl.textContent = ''; // Vyčistí chybu po úspěšné aktualizaci
+                
+            } catch (error) {
+                console.error('Chyba při načítání dat:', error);
+                // Vizuálně resetujeme pruh i při chybě, aby se cyklus opakoval
+                restartCountdownBar(); 
+
+                // Zobrazíme konkrétnější chybovou zprávu
+                if (error.message.includes('429')) {
+                    showError("Překročen limit požadavků. PopCat API blokuje přístup. (Error 429)");
+                } else if (error.message.includes('CORS') || error.message.includes('HTML')) {
+                    showError("Chyba: API blokuje přímé připojení. Zkouším přes proxy, ale může být také blokována.");
+                } else if (error.message.includes('Failed to fetch') || error.message.includes('TypeError')) {
+                    showError("Chyba připojení (síť/proxy problém). Opakuji...");
+                } else if (error.message.includes('SyntaxError: Unexpected token')) { // Zachytí chybu s HTML místo JSON
+                    showError("Chyba: API vrátilo neplatná data (pravděpodobně je blokováno a poslalo HTML stránku).");
+                }
+                else {
+                    showError(`Neznámá chyba při aktualizaci: ${error.message}.`);
+                }
+            }
+        }
+        
+        // Initialize
+        let lastUpdateTime = null; 
+        initChart(); 
+        fetchCzechClicks(); // První fetch hned po načtení 
+        setInterval(fetchCzechClicks, updateIntervalMs); 
+    </script>
 </body>
 </html>
