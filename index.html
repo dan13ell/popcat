@@ -3,13 +3,14 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Czech Republic PopCat Clicks</title>
+    <title>PopCat Clicks - CZ & SK</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/odometer.js/0.4.7/themes/odometer-theme-minimal.css" />
     <style>
         :root {
             --primary: #1a1a1a;
             --secondary: #252525;
-            --accent: #27ae60;
+            --accent-cz: #27ae60; /* Zelená pro CZ */
+            --accent-sk: #3498db; /* Modrá pro SK */
             --text: #e0e0e0;
             --text-secondary: #a0a0a0;
         }
@@ -21,8 +22,11 @@
             margin: 0;
             padding: 20px;
             display: flex;
+            flex-wrap: wrap; 
             justify-content: center;
+            align-items: flex-start; /* Zarovnání nahoru */
             min-height: 100vh;
+            gap: 40px; /* Mezera mezi dashboardy */
         }
         
         .dashboard {
@@ -34,6 +38,7 @@
             box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
             position: relative;
             overflow: hidden;
+            margin-bottom: 20px; /* Mezera mezi dashboardy na menších obrazovkách */
         }
         
         /* Precision Loading Bar */
@@ -50,7 +55,7 @@
         .loading-bar {
             height: 100%;
             width: 100%;
-            background-color: var(--accent);
+            /* Barva se bude dynamicky nastavovat JavaScriptem */
             transform-origin: left center;
             transform: scaleX(0);
             border-radius: 0 2px 2px 0;
@@ -106,9 +111,12 @@
         
         .small-flag {
             height: 20px;
+            /* Adjust width to maintain aspect ratio, e.g., 20px for 24x18 flags */
+            width: auto; 
             margin-right: 8px;
             border-radius: 2px;
             vertical-align: middle;
+            box-shadow: 0 1px 4px rgba(0, 0, 0, 0.2); /* Smaller shadow for small flags */
         }
         
         h1 {
@@ -137,7 +145,7 @@
             font-size: 42px;
             font-weight: 700;
             margin: 10px 0;
-            color: var(--accent);
+            /* Barva se bude dynamicky nastavovat JavaScriptem */
             text-align: center;
             position: relative;
             z-index: 2;
@@ -160,18 +168,12 @@
         }
         
         .pass-container {
-            background-color: rgba(39, 174, 96, 0.1);
-            border: 1px solid var(--accent);
+            /* Barva a stín se budou dynamicky nastavovat JavaScriptem */
             border-radius: 8px;
             padding: 15px;
             text-align: center;
             box-shadow: 0 4px 10px rgba(0, 0, 0, 0.2);
-            transition: transform 0.2s ease, box-shadow 0.2s ease;
-        }
-        
-        .pass-container:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 6px 15px rgba(39, 174, 96, 0.3);
+            transition: transform 0.2s ease, box-shadow 0.2s ease, background-color 0.2s ease, border 0.2s ease;
         }
         
         .row-container {
@@ -243,7 +245,7 @@
         
         .progress-fill {
             height: 100%;
-            background-color: var(--accent);
+            /* Barva se bude dynamicky nastavovat JavaScriptem */
             width: 0%;
             transition: width 0.5s ease;
         }
@@ -271,15 +273,11 @@
             transition: color 0.2s ease;
         }
         
-        .option-btn:hover {
-            color: var(--accent);
-        }
+        /* Barva hoveru pro option-btn se nastaví dynamicky v JS */
         
         .previous-count {
             position: absolute;
             font-size: 16px;
-            color: var(--accent);
-            background-color: rgba(39, 174, 96, 0.2);
             padding: 5px 10px;
             border-radius: 20px;
             white-space: nowrap;
@@ -290,6 +288,7 @@
             z-index: 3;
             font-weight: bold;
             text-shadow: 0 0 5px rgba(0, 0, 0, 0.5);
+            /* Barva se bude dynamicky nastavovat JavaScriptem */
         }
         
         @keyframes float {
@@ -312,7 +311,7 @@
             text-align: center;
         }
 
-        /* Odometer specific styling */
+        /* Odometer specific styling (unchanged) */
         .odometer.odometer-auto-theme,
         .odometer.odometer-theme-minimal {
             display: inline-block;
@@ -397,16 +396,6 @@
             -webkit-transform: translateY(-100%);
             -moz-transform: translateY(-100%);
             -ms-transform: translateY(-100%);
-            -o-transform: translateY(-100%);
-            transform: translateY(-100%);
-        }
-        .odometer.odometer-auto-theme.odometer-animating-down.odometer-animating
-            .odometer-ribbon-inner,
-        .odometer.odometer-theme-minimal.odometer-animating-down.odometer-animating
-            .odometer-ribbon-inner {
-            -webkit-transition: -webkit-transform 2s;
-            -moz-transition: -moz-transform 2s;
-            -ms-transition: -ms-transform 2s;
             -o-transition: -o-transform 2s;
             transition: transform 2s;
             -webkit-transform: translateY(0);
@@ -422,7 +411,6 @@
         .odometer-digit,
         .odometer-inside {
             line-height: 1.05em !important;
-            /*height: 1.05em !important;*/
             margin: 0px;
             padding: 0px;
             vertical-align: middle;
@@ -432,23 +420,13 @@
             text-align: center;
         }
 
-        /* Adjustments for Odometer in specific elements */
-        #click-count.odometer {
-            font-size: 42px; /* Ensure odometer matches big-number style */
-            font-weight: 700;
-            color: var(--accent);
-        }
-        #clicks-to-pass.odometer,
-        #next-goal.odometer {
-            font-size: 24px; /* Ensure odometer matches stat-number style */
-            font-weight: 600;
-        }
+        /* Adjustments for Odometer in specific elements (now dynamically set by JS) */
     </style>
 </head>
 <body>
-    <div class="dashboard">
+    <div class="dashboard" id="cz-dashboard">
         <div class="loading-bar-container">
-            <div class="loading-bar" id="loading-bar"></div>
+            <div class="loading-bar" id="loading-bar-cz"></div>
         </div>
         
         <div class="header">
@@ -456,32 +434,32 @@
             <h1>Czech Republic PopCat Clicks</h1>
         </div>
         
-        <div class="main-stat" id="main-stat">
-            <div class="big-number odometer" id="click-count">0</div>
+        <div class="main-stat" id="main-stat-cz">
+            <div class="big-number odometer" id="click-count-cz">0</div>
             <div class="stat-label">Total Clicks</div>
-            <div id="error-message" class="error-message"></div>
+            <div id="error-message-cz" class="error-message"></div>
         </div>
         
         <div class="stats-container">
-            <div class="pass-container" id="pass-container">
-                <div class="stat-number odometer" id="clicks-to-pass">0</div>
+            <div class="pass-container" id="pass-container-cz">
+                <div class="stat-number odometer" id="clicks-to-pass-cz">0</div>
                 <div class="stat-label">To Pass Next Country</div>
-                <div class="competitor-info" id="competitor-info"></div>
+                <div class="competitor-info" id="competitor-info-cz"></div>
             </div>
             
             <div class="row-container">
                 <div class="stat-card">
-                    <div class="stat-number" id="current-rank">-</div>
+                    <div class="stat-number" id="current-rank-cz">-</div>
                     <div class="stat-label">Current Rank</div>
                 </div>
                 <div class="stat-card">
-                    <div class="stat-number" id="clicks-1s">0</div>
+                    <div class="stat-number" id="clicks-1s-cz">0</div>
                     <div class="stat-label">Clicks / Second</div>
                 </div>
             </div>
             
             <div class="goal-container">
-                <div class="stat-number odometer" id="next-goal">1000000</div>
+                <div class="stat-number odometer" id="next-goal-cz">1000000</div>
                 <div class="stat-label">To Next Million</div>
             </div>
         </div>
@@ -489,15 +467,76 @@
         <div class="progress-container">
             <div class="progress-label">
                 <span>Progress to next million</span>
-                <span id="progress-percent">0%</span>
+                <span id="progress-percent-cz">0%</span>
             </div>
             <div class="progress-bar">
-                <div class="progress-fill" id="progress-fill"></div>
+                <div class="progress-fill" id="progress-fill-cz"></div>
             </div>
         </div>
         
         <div class="chart-container">
-            <canvas id="historyChart"></canvas>
+            <canvas id="historyChart-cz"></canvas>
+        </div>
+        
+        <div class="options">
+            <button class="option-btn">Change Country</button>
+            <button class="option-btn">Visit PopCat</button>
+            <button class="option-btn">Compare</button>
+        </div>
+    </div>
+
+    <div class="dashboard" id="sk-dashboard">
+        <div class="loading-bar-container">
+            <div class="loading-bar" id="loading-bar-sk"></div>
+        </div>
+        
+        <div class="header">
+            <img src="https://flagcdn.com/192x144/sk.png" class="flag" alt="Slovak Flag">
+            <h1>Slovakia PopCat Clicks</h1>
+        </div>
+        
+        <div class="main-stat" id="main-stat-sk">
+            <div class="big-number odometer" id="click-count-sk">0</div>
+            <div class="stat-label">Total Clicks</div>
+            <div id="error-message-sk" class="error-message"></div>
+        </div>
+        
+        <div class="stats-container">
+            <div class="pass-container" id="pass-container-sk">
+                <div class="stat-number odometer" id="clicks-to-pass-sk">0</div>
+                <div class="stat-label">To Pass Next Country</div>
+                <div class="competitor-info" id="competitor-info-sk"></div>
+            </div>
+            
+            <div class="row-container">
+                <div class="stat-card">
+                    <div class="stat-number" id="current-rank-sk">-</div>
+                    <div class="stat-label">Current Rank</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number" id="clicks-1s-sk">0</div>
+                    <div class="stat-label">Clicks / Second</div>
+                </div>
+            </div>
+            
+            <div class="goal-container">
+                <div class="stat-number odometer" id="next-goal-sk">1000000</div>
+                <div class="stat-label">To Next Million</div>
+            </div>
+        </div>
+        
+        <div class="progress-container">
+            <div class="progress-label">
+                <span>Progress to next million</span>
+                <span id="progress-percent-sk">0%</span>
+            </div>
+            <div class="progress-bar">
+                <div class="progress-fill" id="progress-fill-sk"></div>
+            </div>
+        </div>
+        
+        <div class="chart-container">
+            <canvas id="historyChart-sk"></canvas>
         </div>
         
         <div class="options">
@@ -510,83 +549,184 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/odometer.js/0.4.7/odometer.min.js"></script>
     <script>
-        // Data tracking
-        let lastCount = 0;
-        let previousCount = 0;
-        let historyData = [];
+        const LOADING_DURATION = 7000; // 7 seconds in ms
         const maxHistoryPoints = 30;
-        let historyChart = null;
-        let countryRankings = [];
-        let czPosition = 0;
-        
-        // DOM elements
-        const clickCountEl = document.getElementById('click-count');
-        const clicks1sEl = document.getElementById('clicks-1s');
-        const progressFillEl = document.getElementById('progress-fill');
-        const progressPercentEl = document.getElementById('progress-percent');
-        const mainStatEl = document.getElementById('main-stat');
-        const nextGoalEl = document.getElementById('next-goal');
-        const currentRankEl = document.getElementById('current-rank');
-        const clicksToPassEl = document.getElementById('clicks-to-pass');
-        const competitorInfoEl = document.getElementById('competitor-info');
-        const errorMessageEl = document.getElementById('error-message');
-        const passContainerEl = document.getElementById('pass-container');
-        const loadingBarEl = document.getElementById('loading-bar');
-        
-        // Initialize Odometer instances
-        const odometerClickCount = new Odometer({
-            el: clickCountEl,
-            value: 0,
-            format: '(,ddd)', // Formats with commas
-            theme: 'minimal' // Use the minimal theme
-        });
+        const apiUrl = 'https://leaderboard.popcat.click/';
+        const proxyUrl = 'https://api.codetabs.com/v1/proxy/?quest='; // Používáme proxy pro případné problémy s CORS
 
-        const odometerClicksToPass = new Odometer({
-            el: clicksToPassEl,
-            value: 0,
-            format: '(,ddd)',
-            theme: 'minimal'
-        });
+        // Konfigurace pro jednotlivé země
+        const countries = {
+            'CZ': {
+                code: 'CZ',
+                name: 'Czech Republic',
+                flagUrl: 'https://flagcdn.com/192x144/cz.png',
+                color: getComputedStyle(document.documentElement).getPropertyValue('--accent-cz'), // Zelená
+                lastCount: 0,
+                previousCount: 0,
+                historyData: [],
+                historyChart: null,
+                lastUpdateTime: null,
+                // DOM elements
+                clickCountEl: document.getElementById('click-count-cz'),
+                clicks1sEl: document.getElementById('clicks-1s-cz'),
+                progressFillEl: document.getElementById('progress-fill-cz'),
+                progressPercentEl: document.getElementById('progress-percent-cz'),
+                mainStatEl: document.getElementById('main-stat-cz'),
+                nextGoalEl: document.getElementById('next-goal-cz'),
+                currentRankEl: document.getElementById('current-rank-cz'),
+                clicksToPassEl: document.getElementById('clicks-to-pass-cz'),
+                competitorInfoEl: document.getElementById('competitor-info-cz'),
+                errorMessageEl: document.getElementById('error-message-cz'),
+                passContainerEl: document.getElementById('pass-container-cz'),
+                loadingBarEl: document.getElementById('loading-bar-cz'),
+                chartCanvas: document.getElementById('historyChart-cz'),
+                odometerClickCount: null,
+                odometerClicksToPass: null,
+                odometerNextGoal: null,
+                loadingBarTimeout: null
+            },
+            'SK': {
+                code: 'SK',
+                name: 'Slovakia',
+                flagUrl: 'https://flagcdn.com/192x144/sk.png',
+                color: getComputedStyle(document.documentElement).getPropertyValue('--accent-sk'), // Modrá
+                lastCount: 0,
+                previousCount: 0,
+                historyData: [],
+                historyChart: null,
+                lastUpdateTime: null,
+                // DOM elements
+                clickCountEl: document.getElementById('click-count-sk'),
+                clicks1sEl: document.getElementById('clicks-1s-sk'),
+                progressFillEl: document.getElementById('progress-fill-sk'),
+                progressPercentEl: document.getElementById('progress-percent-sk'),
+                mainStatEl: document.getElementById('main-stat-sk'),
+                nextGoalEl: document.getElementById('next-goal-sk'),
+                currentRankEl: document.getElementById('current-rank-sk'),
+                clicksToPassEl: document.getElementById('clicks-to-pass-sk'),
+                competitorInfoEl: document.getElementById('competitor-info-sk'),
+                errorMessageEl: document.getElementById('error-message-sk'),
+                passContainerEl: document.getElementById('pass-container-sk'),
+                loadingBarEl: document.getElementById('loading-bar-sk'),
+                chartCanvas: document.getElementById('historyChart-sk'),
+                odometerClickCount: null,
+                odometerClicksToPass: null,
+                odometerNextGoal: null,
+                loadingBarTimeout: null
+            }
+        };
 
-        const odometerNextGoal = new Odometer({
-            el: nextGoalEl,
-            value: 1000000,
-            format: '(,ddd)',
-            theme: 'minimal'
-        });
+        let countryRankings = []; // Celkové pořadí zemí
+
+        // Inicializace Odometer instancí a grafů pro všechny země
+        function initializeCountry(country) {
+            // Odometer instance pro hlavní počítadlo
+            country.odometerClickCount = new Odometer({
+                el: country.clickCountEl,
+                value: 0,
+                format: '(,ddd)',
+                theme: 'minimal'
+            });
+
+            // Odometer instance pro "To Pass Next Country"
+            country.odometerClicksToPass = new Odometer({
+                el: country.clicksToPassEl,
+                value: 0,
+                format: '(,ddd)',
+                theme: 'minimal'
+            });
+
+            // Odometer instance pro "To Next Million"
+            country.odometerNextGoal = new Odometer({
+                el: country.nextGoalEl,
+                value: 1000000, // Počáteční hodnota
+                format: '(,ddd)',
+                theme: 'minimal'
+            });
+
+            initChart(country);
+
+            // Nastavení barev pro prvky specifické pro danou zemi
+            country.clickCountEl.style.color = country.color;
+            country.loadingBarEl.style.backgroundColor = country.color;
+            country.progressFillEl.style.backgroundColor = country.color;
+            
+            // Nastavení barev a stínů pro pass-container a jeho hover efekt
+            country.passContainerEl.style.borderColor = country.color;
+            country.passContainerEl.style.backgroundColor = hexToRgba(country.color, 0.1);
+
+            country.passContainerEl.onmouseover = () => {
+                country.passContainerEl.style.boxShadow = `0 6px 15px ${hexToRgba(country.color, 0.3)}`;
+            };
+            country.passContainerEl.onmouseout = () => {
+                country.passContainerEl.style.boxShadow = '0 4px 10px rgba(0, 0, 0, 0.2)';
+            };
+
+            // Nastavení hover efektu pro option-btn v rámci dashboardu
+            const optionButtons = document.querySelectorAll(`#${country.code.toLowerCase()}-dashboard .option-btn`);
+            optionButtons.forEach(btn => {
+                btn.onmouseover = () => {
+                    btn.style.color = country.color;
+                };
+                btn.onmouseout = () => {
+                    btn.style.color = 'var(--text)';
+                };
+            });
+        }
+
+        // Helper function to convert hex to rgba
+        function hexToRgba(hex, alpha) {
+            let r = 0, g = 0, b = 0;
+            // Handle #RGB format
+            if (hex.length == 4) {
+                r = parseInt(hex[1] + hex[1], 16);
+                g = parseInt(hex[2] + hex[2], 16);
+                b = parseInt(hex[3] + hex[3], 16);
+            }
+            // Handle #RRGGBB format
+            else if (hex.length == 7) {
+                r = parseInt(hex.substring(1, 3), 16);
+                g = parseInt(hex.substring(3, 5), 16);
+                b = parseInt(hex.substring(5, 7), 16);
+            }
+            return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+        }
 
         // Precision loading bar control
-        let loadingBarTimeout;
-        const LOADING_DURATION = 7000; // 7 seconds in ms
-        
-        function resetLoadingBar() {
-            clearTimeout(loadingBarTimeout);
+        function resetLoadingBar(country) {
+            clearTimeout(country.loadingBarTimeout);
             
-            loadingBarEl.classList.add('loading-bar-reset');
+            country.loadingBarEl.classList.add('loading-bar-reset');
             
             setTimeout(() => {
-                loadingBarEl.style.animation = 'none';
-                loadingBarEl.classList.remove('loading-bar-reset');
-                void loadingBarEl.offsetWidth;
-                loadingBarEl.style.animation = `loadingProgress ${LOADING_DURATION}ms linear forwards`;
+                country.loadingBarEl.style.animation = 'none';
+                country.loadingBarEl.classList.remove('loading-bar-reset');
+                void country.loadingBarEl.offsetWidth; // Trigger reflow
+                country.loadingBarEl.style.animation = `loadingProgress ${LOADING_DURATION}ms linear forwards`;
                 
-                loadingBarTimeout = setTimeout(() => {
-                    fetchCzechClicks();
-                }, LOADING_DURATION - 50);
+                // Fetch data for all countries after the loading bar animation completes for any country
+                // This ensures that all countries refresh at roughly the same interval
+                // We only need to call fetchAllClicks once, it will handle all countries
+                if (country.code === 'CZ') { // Only trigger from one country's timeout to avoid multiple calls
+                    country.loadingBarTimeout = setTimeout(fetchAllClicks, LOADING_DURATION - 50);
+                } else {
+                    country.loadingBarTimeout = setTimeout(() => {}, LOADING_DURATION - 50); // Dummy timeout for other countries
+                }
+
             }, 300);
         }
 
-        // Initialize chart
-        const ctx = document.getElementById('historyChart').getContext('2d');
-        function initChart() {
-            historyChart = new Chart(ctx, {
+        // Initialize chart for a specific country
+        function initChart(country) {
+            const ctx = country.chartCanvas.getContext('2d');
+            country.historyChart = new Chart(ctx, {
                 type: 'line',
                 data: {
                     labels: Array(maxHistoryPoints).fill(''),
                     datasets: [{
-                        data: historyData,
-                        borderColor: '#27ae60',
-                        backgroundColor: 'rgba(39, 174, 96, 0.1)',
+                        data: country.historyData,
+                        borderColor: country.color,
+                        backgroundColor: hexToRgba(country.color, 0.1),
                         borderWidth: 2,
                         fill: true,
                         tension: 0.4,
@@ -600,29 +740,50 @@
                         x: { display: false },
                         y: { 
                             display: true,
-                            grid: { color: 'rgba(255, 255, 255, 0.1)' }
+                            grid: { color: 'rgba(255, 255, 255, 0.1)' },
+                            ticks: {
+                                callback: function(value, index, ticks) {
+                                    return formatNumberForChart(value);
+                                }
+                            }
                         }
                     },
                     plugins: {
-                        legend: { display: false }
+                        legend: { display: false },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    let label = context.dataset.label || '';
+                                    if (label) {
+                                        label += ': ';
+                                    }
+                                    if (context.parsed.y !== null) {
+                                        label += formatNumber(context.parsed.y);
+                                    }
+                                    return label;
+                                }
+                            }
+                        }
                     }
                 }
             });
         }
         
         // Create a floating previous count bubble
-        function createPreviousCountBubble(count) {
+        function createPreviousCountBubble(country, count) {
             if (count === 0) return;
             
             const bubble = document.createElement('div');
             bubble.className = 'previous-count';
             bubble.textContent = `+${formatNumber(count)}`;
+            bubble.style.color = country.color;
+            bubble.style.backgroundColor = hexToRgba(country.color, 0.2);
             
             bubble.style.left = '50%';
             bubble.style.top = '20px';
             bubble.style.transform = 'translateX(-50%)';
             
-            mainStatEl.appendChild(bubble);
+            country.mainStatEl.appendChild(bubble);
             
             setTimeout(() => {
                 bubble.classList.add('show-previous');
@@ -639,78 +800,107 @@
         }
         
         // Update chart with new data
-        function updateChart(newValue) {
-            historyData.push(newValue);
-            if (historyData.length > maxHistoryPoints) {
-                historyData.shift();
+        function updateChartData(country, newValue) {
+            country.historyData.push(newValue);
+            if (country.historyData.length > maxHistoryPoints) {
+                country.historyData.shift();
             }
             
-            if (historyChart) {
-                historyChart.data.datasets[0].data = historyData;
-                historyChart.update();
+            if (country.historyChart) {
+                country.historyChart.data.datasets[0].data = country.historyData;
+                country.historyChart.update();
             }
         }
         
-        // Format numbers with commas (used for previous count bubble)
+        // Format numbers with commas
         function formatNumber(num) {
             return num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
         }
+
+        // Format numbers for chart axis (M, B, T)
+        function formatNumberForChart(num) {
+            if (num >= 1000000000000) {
+                return (num / 1000000000000).toFixed(1).replace(/\.0$/, '') + 'T';
+            }
+            if (num >= 1000000000) {
+                return (num / 1000000000).toFixed(1).replace(/\.0$/, '') + 'B';
+            }
+            if (num >= 1000000) {
+                return (num / 1000000).toFixed(1).replace(/\.0$/, '') + 'M';
+            }
+            return num.toLocaleString();
+        }
         
         // Calculate and update averages
-        function updateAverages(pointsGained, secondsPassed) {
+        function updateAverages(country, pointsGained, secondsPassed) {
             if (secondsPassed > 0) {
                 const ratePerSecond = pointsGained / secondsPassed;
-                clicks1sEl.textContent = (Math.round(ratePerSecond * 10) / 10).toFixed(1);
+                country.clicks1sEl.textContent = (Math.round(ratePerSecond * 10) / 10).toFixed(1);
             }
         }
         
         // Update progress bar and next goal countdown
-        function updateProgress(current) {
+        function updateProgress(country, current) {
             const currentMillion = Math.floor(current / 1000000);
             const nextGoal = 1000000 * (currentMillion + 1);
             const remaining = nextGoal - current;
             
-            odometerNextGoal.update(remaining); // Update with odometer
+            country.odometerNextGoal.update(remaining);
             
             const progress = (current % 1000000) / 1000000 * 100;
-            progressFillEl.style.width = `${progress}%`;
-            progressPercentEl.textContent = `${Math.round(progress)}%`;
+            country.progressFillEl.style.width = `${progress}%`;
+            country.progressPercentEl.textContent = `${Math.round(progress)}%`;
         }
         
-        // Update country ranking and competitor info
-        function updateCountryRanking(data) {
-            countryRankings = Object.keys(data).map(code => ({
+        // Update country ranking and competitor info for a specific country
+        function updateCountryRanking(targetCountry, allData) {
+            // allData jsou surová data z API (objekt s kódy zemí a kliknutími)
+            // Nejprve aktualizujeme globální countryRankings, které je seřazené
+            countryRankings = Object.keys(allData).map(code => ({
                 code,
-                clicks: data[code]
+                clicks: allData[code]
             })).sort((a, b) => b.clicks - a.clicks);
             
-            czPosition = countryRankings.findIndex(c => c.code === 'CZ');
+            const targetCountryData = allData[targetCountry.code];
+            if (typeof targetCountryData !== 'number') {
+                targetCountry.currentRankEl.textContent = '-';
+                targetCountry.odometerClicksToPass.update(0);
+                targetCountry.clicksToPassEl.textContent = "N/A";
+                targetCountry.competitorInfoEl.textContent = "Data unavailable";
+                return;
+            }
+
+            const targetPosition = countryRankings.findIndex(c => c.code === targetCountry.code);
             
-            if (czPosition >= 0) {
-                const suffix = getNumberSuffix(czPosition + 1);
-                currentRankEl.textContent = `${czPosition + 1}${suffix}`;
+            if (targetPosition >= 0) {
+                const suffix = getNumberSuffix(targetPosition + 1);
+                targetCountry.currentRankEl.textContent = `${targetPosition + 1}${suffix}`;
                 
-                if (czPosition > 0) {
-                    const competitor = countryRankings[czPosition - 1];
-                    const clicksNeeded = competitor.clicks - data.CZ + 1;
-                    odometerClicksToPass.update(clicksNeeded); // Update with odometer
+                if (targetPosition > 0) {
+                    const competitor = countryRankings[targetPosition - 1];
+                    const clicksNeeded = competitor.clicks - targetCountryData + 1;
+                    targetCountry.odometerClicksToPass.update(clicksNeeded);
                     
-                    competitorInfoEl.innerHTML = `
+                    // Používáme novou URL pro vlajku, která je 24x18
+                    targetCountry.competitorInfoEl.innerHTML = `
                         <img src="https://flagcdn.com/24x18/${competitor.code.toLowerCase()}.png" class="small-flag" alt="${competitor.code}">
                         ${getCountryName(competitor.code)}
                     `;
                     
-                    if (clicksNeeded < 100000) {
-                        passContainerEl.style.backgroundColor = 'rgba(39, 174, 96, 0.2)';
-                        passContainerEl.style.border = '1px solid var(--accent)';
+                    if (clicksNeeded < 1000000) { // Zvýraznění, pokud je konkurence blízko
+                        targetCountry.passContainerEl.style.backgroundColor = hexToRgba(targetCountry.color, 0.2);
+                        targetCountry.passContainerEl.style.border = `1px solid ${targetCountry.color}`;
                     } else {
-                        passContainerEl.style.backgroundColor = 'rgba(39, 174, 96, 0.1)';
+                        targetCountry.passContainerEl.style.backgroundColor = hexToRgba(targetCountry.color, 0.1);
+                        targetCountry.passContainerEl.style.border = `1px solid ${hexToRgba(targetCountry.color, 0.5)}`;
                     }
                 } else {
-                    odometerClicksToPass.update(0); // If 1st, display 0 or similar
-                    clicksToPassEl.textContent = "1st"; // Manual override for "1st" text
-                    competitorInfoEl.textContent = "You're #1!";
-                    passContainerEl.style.backgroundColor = 'rgba(39, 174, 96, 0.3)';
+                    // Je na prvním místě
+                    targetCountry.odometerClicksToPass.update(0); // Nastavíme na 0, protože není nikoho k předjetí
+                    targetCountry.clicksToPassEl.textContent = "1st"; // Alternativní text
+                    targetCountry.competitorInfoEl.textContent = "You're #1!";
+                    targetCountry.passContainerEl.style.backgroundColor = hexToRgba(targetCountry.color, 0.3);
+                    targetCountry.passContainerEl.style.border = `1px solid ${targetCountry.color}`;
                 }
             }
         }
@@ -719,6 +909,7 @@
         function getCountryName(code) {
             const countryNames = {
                 'CZ': 'Czech Republic',
+                'SK': 'Slovakia',
                 'US': 'United States',
                 'GB': 'United Kingdom',
                 'DE': 'Germany',
@@ -738,13 +929,16 @@
                 'SE': 'Sweden',
                 'FI': 'Finland',
                 'NO': 'Norway',
-                'DK': 'Denmark'
+                'DK': 'Denmark',
+                // Přidejte další země, pokud je potřebujete zobrazit
             };
             return countryNames[code] || code;
         }
         
         // Get ordinal suffix for numbers
         function getNumberSuffix(num) {
+            // This is primarily for English suffixes (st, nd, rd, th).
+            // For a purely Czech/Slovak display, this might be simplified or removed.
             if (num >= 11 && num <= 13) return 'th';
             switch (num % 10) {
                 case 1: return 'st';
@@ -755,29 +949,31 @@
         }
         
         // Show error message
-        function showError(message) {
-            errorMessageEl.textContent = message;
+        function showError(country, message) {
+            country.errorMessageEl.textContent = message;
+            // Po 5 sekundách chybu skryjeme
             setTimeout(() => {
-                errorMessageEl.textContent = '';
+                country.errorMessageEl.textContent = '';
             }, 5000);
         }
         
-        // Fetch data from API
-        async function fetchCzechClicks() {
+        // Fetch data from API for all countries and update individual dashboards
+        async function fetchAllClicks() {
             try {
-                resetLoadingBar(); // Reset with precision timing
+                // Reset loading bars for all countries before fetching
+                for (const key in countries) {
+                    resetLoadingBar(countries[key]);
+                }
                 
-                const apiUrl = 'https://leaderboard.popcat.click/';
                 let response;
-                
                 try {
                     response = await fetch(apiUrl);
                     const contentType = response.headers.get('content-type');
                     if (contentType && contentType.includes('text/html')) {
-                        throw new Error('Direct fetch returned HTML');
+                        throw new Error('Direct fetch returned HTML, trying proxy.');
                     }
                 } catch (directError) {
-                    const proxyUrl = 'https://api.codetabs.com/v1/proxy/?quest=';
+                    console.warn(`Direct fetch failed, trying proxy:`, directError.message);
                     response = await fetch(proxyUrl + encodeURIComponent(apiUrl));
                 }
                 
@@ -785,45 +981,72 @@
                 
                 const data = await response.json();
                 
-                if (!data || !data.CZ) {
+                if (!data || typeof data !== 'object') {
                     throw new Error('Invalid data format from API');
                 }
+
+                // Aktualizujeme globální countryRankings pouze jednou z celého datasetu
+                countryRankings = Object.keys(data).map(code => ({
+                    code,
+                    clicks: data[code]
+                })).sort((a, b) => b.clicks - a.clicks);
                 
-                const newCount = data.CZ;
-                const now = new Date();
-                
-                updateCountryRanking(data);
-                
-                if (lastCount > 0) {
-                    const timeDiff = (now - lastUpdateTime) / 1000;
-                    const pointsGained = newCount - lastCount;
-                    updateAverages(pointsGained, timeDiff);
-                    
-                    if (pointsGained > 0) {
-                        createPreviousCountBubble(pointsGained);
+                // Nyní projdeme všechny definované země a aktualizujeme jejich data
+                for (const countryCode in countries) {
+                    const country = countries[countryCode];
+                    const newCount = data[countryCode];
+
+                    if (typeof newCount !== 'number') {
+                        showError(country, `Data for ${country.name} is missing or invalid.`);
+                        continue; // Přeskočíme tuto zemi a pokusíme se o další
                     }
+
+                    const now = new Date();
+                    
+                    if (country.lastCount > 0) {
+                        const timeDiff = (now - country.lastUpdateTime) / 1000;
+                        const pointsGained = newCount - country.lastCount;
+                        updateAverages(country, pointsGained, timeDiff);
+                        
+                        if (pointsGained > 0) {
+                            createPreviousCountBubble(country, pointsGained);
+                        }
+                    }
+                    
+                    country.previousCount = country.lastCount;
+                    country.lastCount = newCount;
+                    country.lastUpdateTime = now;
+                    
+                    country.odometerClickCount.update(newCount);
+                    updateProgress(country, newCount);
+                    updateChartData(country, newCount);
+
+                    // Aktualizovat pořadí a data pro všechny země po získání nových dat
+                    // To zajistí, že "To Pass Next Country" bude vždy aktuální vzhledem k celému žebříčku
+                    updateCountryRanking(country, data);
                 }
                 
-                previousCount = lastCount;
-                lastCount = newCount;
-                lastUpdateTime = now;
-                
-                odometerClickCount.update(newCount); // Update with odometer
-                updateProgress(newCount);
-                updateChart(newCount);
-                
             } catch (error) {
-                console.error('Error fetching data:', error);
-                showError(`Error updating data. Retrying...`);
-                resetLoadingBar(); // Ensure loading bar continues even on error
+                console.error(`Global error fetching data:`, error);
+                // Zobrazit chybu pro všechny země nebo obecnou chybu
+                for (const key in countries) {
+                    showError(countries[key], `Error updating data for ${countries[key].name}. Retrying...`);
+                }
+            } finally {
+                // Naplánujeme další fetch i po chybě, aby se aplikace pokusila zotavit
+                // Timeout je již nastaven v resetLoadingBar pro CZ zemi, aby se neduplikovaly fetsche
             }
         }
         
-        // Initialize
-        let lastUpdateTime = null;
-        initChart();
-        resetLoadingBar(); // Start the precision loading bar
-        fetchCzechClicks(); // Initial data load
+        // Inicializace pro obě země po načtení DOM
+        document.addEventListener('DOMContentLoaded', () => {
+            initializeCountry(countries.CZ);
+            initializeCountry(countries.SK);
+            
+            // Spustit načítání dat pro všechny země poprvé
+            fetchAllClicks();
+        });
+
     </script>
 </body>
 </html>
