@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>PopCat kliky - ČR & SR</title>
     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700;800&display=swap" rel="stylesheet">
+    <!-- Načítání odometer.css z CDN - pro konzistentní chování -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/odometer.js/0.4.7/themes/odometer-theme-minimal.css" />
     <style>
         :root {
@@ -19,84 +20,171 @@
         }
         
         body {
-            font-family: 'Roboto', sans-serif; /* Použijeme Roboto pro celé tělo */
+            font-family: 'Roboto', sans-serif;
             background-color: var(--primary);
             color: var(--text);
             margin: 0;
-            padding: 30px;
+            padding: 20px;
             display: flex;
-            flex-wrap: wrap; 
-            justify-content: center; /* Výchozí zarovnání na střed pro menší obrazovky */
-            align-items: flex-start;
+            flex-direction: column;
+            justify-content: space-between;
+            align-items: center;
             min-height: 100vh;
-            gap: 50px;
+            gap: 30px;
             overflow-x: hidden;
-            font-weight: 400; /* Základní váha fontu */
+            font-weight: 400;
         }
 
-        /* Rozložení pro desktop */
-        @media (min-width: 992px) { /* breakpoint pro větší obrazovky */
-            body {
-                justify-content: center; /* Změna na center pro rovnoměrné rozložení */
-                padding: 30px 40px; /* Upravený padding pro lepší škálování */
-                gap: 20px; /* Zmenšíme mezeru mezi dashboardy */
-            }
-            .dashboard {
-                flex: 1 1 calc(50% - 30px); /* flex-grow, flex-shrink, flex-basis. Zmenšeno o mezery */
-                max-width: calc(50% - 30px); /* Nový max-width, aby se vešly dva vedle sebe s mezerou */
-                margin-bottom: 0; /* Zruší margin-bottom na desktopu */
-                box-sizing: border-box; /* Zajištění, že padding a border nebudou zvětšovat celkovou šířku */
-                transition: none; /* Odstranit transition z dashboardu */
-            }
-            .dashboard:hover { /* Odstranit hover z dashboardu */
-                transform: none;
-                box-shadow: 0 8px 30px var(--shadow-strong);
-            }
-            /* Odstraníme individuální margin-right/left, protože gap se postará o mezeru */
-            #cz-dashboard {
-                margin-right: 0; 
-            }
-            #sk-dashboard {
-                margin-left: 0;
-            }
+        /* Hlavní kontejner pro všechny dashboardy a predikční tabulky */
+        .main-content-wrappers {
+            display: flex;
+            flex-direction: column; /* Výchozí pro mobil - skládat pod sebe */
+            gap: 20px;
+            align-items: center;
+            width: 100%;
+            max-width: 1100px; /* Omezení šířky pro velká PC */
         }
-        
+
         .dashboard {
             width: 100%;
-            max-width: 550px; /* Výchozí max-width pro mobil */
+            max-width: 650px; 
             background-color: var(--secondary);
             border-radius: 15px;
-            padding: 30px;
+            padding: 25px;
             box-shadow: 0 8px 30px var(--shadow-strong);
             position: relative;
             overflow: hidden;
-            margin-bottom: 30px; /* Pouze pro mobilní/menší zobrazení, kde jsou pod sebou */
+            box-sizing: border-box;
         }
 
-        /* Nová animace pro main-stat */
+        .prediction-table-container {
+            width: 100%;
+            max-width: 400px; /* Zvětšeno pro delší predikce na PC */
+            background-color: var(--secondary);
+            border-radius: 15px;
+            box-shadow: 0 8px 30px var(--shadow-strong);
+            padding: 15px;
+            text-align: center;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            box-sizing: border-box;
+            transition: transform 0.3s ease-in-out, box-shadow 0.3s ease-in-out;
+        }
+
+        /* Desktop-specific styles */
+        @media (min-width: 992px) {
+            body {
+                padding: 20px 0; /* Odebere boční odsazení z body pro plnou šířku. Obal hlavního obsahu bude spravovat odsazení. */
+            }
+
+            .main-content-wrappers {
+                flex-direction: row; /* Pro PC - vše v jednom řádku */
+                flex-wrap: nowrap; /* Nezalamovat na menší šířky na desktopu */
+                justify-content: center; /* Vycentruje obsah */
+                align-items: flex-start;
+                width: 100%; /* Zabere plnou šířku */
+                max-width: calc(100% - 40px); /* Malé celkové odsazení na hlavním obalu */
+                gap: 20px; /* Konzistentní mezera */
+                padding: 0 20px; /* Explicitní odsazení pro obal */
+                box-sizing: border-box; /* Zahrnout odsazení do šířky */
+            }
+
+            .dashboard {
+                flex: 1; /* Umožňuje dashboardům růst a zmenšovat se */
+                min-width: 450px; /* Minimální šířka, aby se dashboardy příliš nesmrštily */
+                max-width: 600px; /* Maximální šířka pro dashboardy */
+            }
+
+            .prediction-table-container {
+                flex: 0 0 350px; /* Pevná šířka pro delší predikce na PC */
+            }
+
+            /* Specifické pořadí pro PC layout */
+            #prediction-table-cz { order: 1; }
+            #cz-dashboard { order: 2; }
+            #sk-dashboard { order: 3; }
+            #prediction-table-sk { order: 4; }
+
+            /* Nastavení spodní lišty pro desktop */
+            .bottom-bar {
+                max-width: calc(100% - 40px); /* Shoduje se s šířkou main-content-wrappers */
+                align-self: center; /* Vycentrování spodního panelu */
+                margin-top: 30px; /* Místo od horního obsahu */
+            }
+        }
+
+        /* Mobile-specific order for CZ prediction table */
+        @media (max-width: 991px) {
+            .main-content-wrappers {
+                flex-direction: column; /* Zajistí vertikální skládání */
+                align-items: center; /* Vycentrování položek horizontálně na mobilu */
+            }
+            #cz-dashboard {
+                order: 1; /* CZ Dashboard jako první na mobilu */
+            }
+            #prediction-table-cz {
+                order: 2; /* CZ Predikční tabulka jako druhá na mobilu (pod dashboardem) */
+            }
+            #sk-dashboard {
+                order: 3; /* SK Dashboard jako třetí na mobilu */
+            }
+            #prediction-table-sk {
+                order: 4; /* SK Predikční tabulka jako čtvrtá na mobilu */
+            }
+        }
+
+        /* CSS pro dynamické zmenšování písma */
+        @media (max-width: 768px) {
+            .big-number {
+                /* Změněno na ještě větší flexibilitu na malých obrazovkách */
+                font-size: clamp(25px, 12vw, 65px); 
+            }
+            .stat-number {
+                /* Změněno na ještě větší flexibilitu na malých obrazovkách */
+                font-size: clamp(18px, 6vw, 32px); 
+            }
+            .odometer {
+                white-space: nowrap; /* Zabrání zalomení čísla, pokud se zmenšuje písmo */
+            }
+            /* Responzivita pro počítadlo v dolní liště */
+            .leader-info .odometer {
+                font-size: clamp(10px, 5vw, 14px); 
+            }
+            .option-btn {
+                font-size: 13px; /* Mírné zmenšení textu tlačítek na menších obrazovkách */
+                padding: 8px 15px;
+            }
+            .option-btn img {
+                height: 18px; /* Mírné zmenšení ikon na menších obrazovkách */
+            }
+        }
+
+
         .main-stat {
             background-color: rgba(0, 0, 0, 0.3);
             border-radius: 12px;
-            padding: 25px;
-            margin-bottom: 20px;
+            padding: 20px;
+            margin-bottom: 15px;
             text-align: center;
-            position: relative;
-            min-height: 140px;
+            position: relative; 
+            min-height: 120px;
             overflow: hidden;
             display: flex;
             flex-direction: column;
             justify-content: center;
             align-items: center;
             box-shadow: 0 6px 20px var(--shadow-strong);
-            transition: transform 0.3s ease-in-out, box-shadow 0.3s ease-in-out; /* Přidána animace */
+            transition: transform 0.3s ease-in-out, box-shadow 0.3s ease-in-out;
+            flex-shrink: 0; 
         }
 
-        .main-stat:hover { /* Přidána animace na main-stat */
+        .main-stat:hover {
             transform: translateY(-5px);
             box-shadow: 0 12px 40px var(--shadow-strong);
         }
         
-        /* Precision Loading Bar */
         .loading-bar-container {
             position: absolute;
             top: 0;
@@ -113,36 +201,23 @@
             transform-origin: left center;
             transform: scaleX(0);
             border-radius: 0 3px 3px 0;
-            animation: loadingProgress 2000ms linear forwards; /* Zpět na 2s refresh */
-        }
-        
-        /* Nová animace pro návrat lišty na začátek */
-        @keyframes loadingReturn {
-            0% { transform: scaleX(1); opacity: 1; }
-            100% { transform: scaleX(0); opacity: 1; }
-        }
-
-        .loading-bar-return {
-            animation: loadingReturn 150ms ease-in forwards; /* Změněno na 150ms */
+            /* Animation applied in JS for precise control */
         }
         
         @keyframes loadingProgress {
             0% { transform: scaleX(0); }
             100% { transform: scaleX(1); }
         }
-        
-        @keyframes loadingReset { /* Původní reset, nyní nepoužitý, ale ponechaný */
-            0% { 
-                transform: scaleX(1);
-                opacity: 1;
-            }
-            100% { 
-                transform: scaleX(1.2);
-                opacity: 0;
-            }
+
+        @keyframes loadingReturn {
+            0% { transform: scaleX(1); opacity: 1; }
+            100% { transform: scaleX(0); opacity: 1; }
         }
         
-        /* Tab effect - slightly adjusted */
+        .loading-bar-return {
+            animation: loadingReturn 150ms ease-in forwards;
+        }
+        
         .dashboard::before {
             content: '';
             position: absolute;
@@ -158,24 +233,22 @@
         .header {
             display: flex;
             align-items: center;
-            margin-bottom: 30px;
-            margin-top: 15px;
+            margin-bottom: 20px;
+            margin-top: 10px;
         }
 
-        /* Updated flag styling */
         .flag {
-            height: 50px; /* Standard size */
-            width: auto; /* Maintain aspect ratio */
-            margin-right: 20px;
+            height: 40px;
+            width: auto;
+            margin-right: 15px;
             border-radius: 6px; 
             box-shadow: 0 3px 10px var(--shadow-light);
         }
 
-        /* Small flag for competitor info */
         .small-flag {
-            height: 24px; /* Standard size */
-            width: auto; /* Maintain aspect ratio */
-            margin-right: 10px;
+            height: 20px;
+            width: auto;
+            margin-right: 8px;
             border-radius: 3px; 
             vertical-align: middle;
             box-shadow: 0 2px 6px var(--shadow-light);
@@ -183,70 +256,68 @@
         
         h1 {
             margin: 0;
-            font-size: 28px;
-            font-weight: 700; /* H1 zůstává tučný */
-            display: flex; /* Flex pro zarovnání vlajky a textu */
-            align-items: center; /* Vycentrování vlajky s textem */
+            font-size: 24px;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
         }
         
         .big-number {
-            font-size: 60px;
-            font-weight: 800; /* Čísla zůstanou extra tučná */
-            margin: 10px 0;
+            font-size: 65px; /* Zvětšeno */
+            font-weight: 800;
+            margin: 8px 0;
             text-align: center;
             position: relative;
             z-index: 2;
-            color: var(--text); /* Bílá barva */
-            text-shadow: none; /* Bez světla */
+            color: var(--text);
+            text-shadow: none;
             transition: color 0.3s ease;
         }
         
         .stat-label {
-            font-size: 16px;
+            font-size: 14px;
             color: var(--text-secondary);
             text-transform: uppercase;
-            letter-spacing: 1.5px;
+            letter-spacing: 1.2px;
             position: relative;
             z-index: 2;
-            font-weight: 500; /* Trochu bold */
-            margin-top: 5px; /* Posunout text "Celkem kliků" trochu dolů */
+            font-weight: 500;
+            margin-top: 5px;
         }
         
         .stats-container {
             display: flex;
             flex-direction: column;
-            gap: 20px;
-            margin-bottom: 25px;
+            gap: 15px;
+            margin-bottom: 20px;
         }
         
-        .pass-container, .goal-container { /* Aplikováno na oba kontejnery */
+        .pass-container, .goal-container {
             border-radius: 10px;
-            padding: 20px;
+            padding: 15px;
             text-align: center;
             box-shadow: 0 6px 15px var(--shadow-strong);
             transition: transform 0.3s ease, box-shadow 0.3s ease, background-color 0.3s ease, border 0.3s ease;
             border: 1px solid rgba(255, 255, 255, 0.2);
-            /* Přidáno pro dynamické nastavení v JS */
             --dynamic-border-color: rgba(255, 255, 255, 0.2); 
             --dynamic-bg-color: rgba(0, 0, 0, 0.3);
         }
 
         .pass-container:hover, .goal-container:hover {
-            transform: translateY(-5px) scale(1.01); /* Mírné zvětšení */
-            box-shadow: 0 10px 25px var(--dynamic-shadow-color); /* Dynamický stín */
+            transform: translateY(-5px) scale(1.01);
+            box-shadow: 0 10px 25px var(--dynamic-shadow-color);
         }
         
         .row-container {
             display: flex;
-            gap: 20px;
+            gap: 15px;
         }
         
         .stat-card {
             flex: 1;
             background-color: rgba(0, 0, 0, 0.3);
             border-radius: 10px;
-            padding: 20px;
-            /* Flexbox pro perfektní centrování obsahu karty */
+            padding: 15px;
             display: flex; 
             flex-direction: column;
             justify-content: center;
@@ -255,43 +326,43 @@
             transition: transform 0.3s ease, box-shadow 0.3s ease;
         }
         
-        .stat-card:hover { /* Jen pro stat-card, ne pro pass-container a goal-container */
+        .stat-card:hover {
             transform: translateY(-5px);
             box-shadow: 0 8px 20px var(--shadow-strong);
         }
         
         .stat-number {
-            font-size: 32px;
-            font-weight: 700; /* Tato čísla zůstanou tučná */
-            margin: 8px 0;
+            font-size: 32px; /* Zvětšeno */
+            font-weight: 700;
+            margin: 6px 0;
             text-shadow: 0 0 5px rgba(255, 255, 255, 0.3);
         }
         
         .competitor-info {
-            font-size: 15px;
-            margin-top: 8px;
+            font-size: 13px;
+            margin-top: 6px;
             display: flex;
             align-items: center;
             justify-content: center;
             color: var(--text-secondary);
-            font-weight: 500; /* Trochu bold */
+            font-weight: 500;
         }
         
         .progress-container {
-            margin-top: 30px;
+            margin-top: 25px;
         }
         
         .progress-label {
             display: flex;
             justify-content: space-between;
-            margin-bottom: 10px;
-            font-size: 15px;
+            margin-bottom: 8px;
+            font-size: 13px;
             color: var(--text-secondary);
-            font-weight: 500; /* Trochu bold */
+            font-weight: 500;
         }
         
         .progress-bar {
-            height: 10px;
+            height: 8px;
             background-color: rgba(255, 255, 255, 0.15);
             border-radius: 5px;
             overflow: hidden;
@@ -306,53 +377,55 @@
         }
         
         .chart-container {
-            margin-top: 35px;
-            height: 250px;
+            margin-top: 30px;
+            height: 200px;
             position: relative;
             background-color: rgba(0, 0, 0, 0.2);
             border-radius: 10px;
-            padding: 15px;
+            padding: 10px;
             box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.3);
         }
         
         .options {
-            margin-top: 30px;
-            border-top: 1px solid rgba(255, 255, 255, 0.15);
-            padding-top: 20px;
-            display: flex;
+            display: flex; /* Zajišťuje flexbox layout */
+            flex-direction: row; /* Explicitně nastavuje řadové zobrazení */
             justify-content: center;
-            gap: 20px;
-            flex-wrap: wrap;
+            gap: 15px;
+            flex-wrap: nowrap; /* Zabrání zalamování na více řádků */
         }
 
-        /* Styles for the new bottom bar */
         .bottom-bar {
             width: 100%;
-            max-width: 1100px; /* Adjust as needed for overall layout */
+            max-width: 1000px;
             background-color: var(--secondary);
             border-radius: 15px;
-            padding: 15px 30px; /* Adjusted padding */
+            padding: 15px 20px;
             box-shadow: 0 8px 30px var(--shadow-strong);
             display: flex;
-            justify-content: space-around;
+            flex-direction: column;
+            justify-content: center;
             align-items: center;
-            flex-wrap: wrap; /* Allow wrapping on smaller screens */
-            gap: 15px; /* Gap between items */
-            margin-top: 30px; /* Space from dashboards */
+            gap: 15px;
             border: 1px solid rgba(255, 255, 255, 0.2);
         }
 
         .leader-info {
             display: flex;
             align-items: center;
-            gap: 10px;
+            gap: 8px;
             color: var(--text-secondary);
             font-size: 14px;
             font-weight: 500;
+            width: 100%;
+            justify-content: center;
+            padding-bottom: 10px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            box-sizing: border-box;
+            padding-top: 0;
         }
 
         .leader-info img {
-            height: 24px;
+            height: 20px;
             border-radius: 3px;
             box-shadow: 0 2px 6px var(--shadow-light);
         }
@@ -362,94 +435,119 @@
             color: var(--text);
         }
 
-        /* Styling for the odometer within leader-info for smaller font */
         .leader-info .odometer {
-            font-size: 14px; /* Match the surrounding text */
-            font-weight: 700; /* Keep it bold */
+            font-size: 14px; /* Defaultní velikost, bude přepsána media query */
+            font-weight: 700;
             color: var(--text);
-            /* Ensure odometer digits are aligned properly */
-            line-height: 1; /* Adjust if needed */
+            line-height: 1;
+        }
+
+        .bottom-bar .options {
+            width: 100%;
+            justify-content: center;
+            padding-top: 15px;
+            border-top: none;
+            margin-top: 0;
+            padding-bottom: 0;
+            flex-wrap: nowrap; /* Ensure nowrap here as well */
         }
         
-        /* Updated .option-btn styles for modern, clean, smooth look */
         .option-btn {
-            background: linear-gradient(145deg, var(--secondary), rgba(31, 31, 31, 0.8)); /* Subtle gradient */
-            border: none; /* Remove border */
+            background: linear-gradient(145deg, var(--secondary), rgba(31, 31, 31, 0.8));
+            border: none;
             color: var(--text);
-            font-size: 16px;
+            font-size: 14px;
             cursor: pointer;
-            padding: 12px 28px; /* Increased padding */
-            border-radius: 30px; /* More rounded corners */
-            transition: all 0.3s ease-in-out; /* Smoother transition */
+            padding: 10px 20px;
+            border-radius: 30px;
+            transition: all 0.3s ease-in-out;
             text-transform: uppercase;
             letter-spacing: 0.8px;
             font-weight: 500;
             display: flex;
             align-items: center;
-            gap: 10px; /* Increased gap for icon and text */
-            text-decoration: none; /* Remove underline for links */
-            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.5); /* Subtle shadow */
+            gap: 8px;
+            text-decoration: none;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.5);
+            white-space: nowrap; /* Prevent wrapping within button */
         }
         
         .option-btn:hover {
-            background-color: var(--primary); /* Darker background on hover */
+            background-color: var(--primary);
             color: var(--text);
-            box-shadow: 0 6px 15px rgba(0, 0, 0, 0.7); /* Stronger shadow on hover */
-            transform: translateY(-2px) scale(1.01); /* Slight lift and scale */
+            box-shadow: 0 6px 15px rgba(0, 0, 0, 0.7);
+            transform: translateY(-2px) scale(1.01);
         }
 
         .option-btn:active {
-            transform: translateY(0); /* Press down effect */
+            transform: translateY(0);
             box-shadow: 0 2px 5px rgba(0, 0, 0, 0.5);
         }
 
         .option-btn img {
-            height: 22px; /* Slightly larger icons */
+            height: 20px;
             width: auto;
-            vertical-align: middle; /* Align with text */
-            filter: brightness(1.1); /* Slightly brighten icons */
-        }
-        
-        .previous-count {
-            position: absolute;
-            font-size: 15px; /* Zmenšený font-size */
-            padding: 6px 12px; /* Zmenšený padding */
-            border-radius: 25px;
-            white-space: nowrap;
-            pointer-events: none;
-            opacity: 0;
-            /* Odstraněna původní nekonečná animace */
-            transition: opacity 0.4s ease-out, transform 0.4s ease-out; /* Zachovány přechody */
-            z-index: 3;
-            font-weight: 500; /* Trochu bold */
-            text-shadow: 0 0 8px rgba(0, 0, 0, 0.7);
-            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.4);
-        }
-        
-        .previous-count.show-previous {
-            opacity: 1;
-            animation: float-once 1.5s ease-in-out forwards; /* Nová animace pro jedno plavání, smoothed */
+            vertical-align: middle;
+            filter: brightness(1.1);
         }
 
-        @keyframes float-once { /* Nový keyframe pro jedno plavání */
-            0% { transform: translateY(0) rotate(0deg); }
-            50% { transform: translateY(-4px) rotate(0.5deg); } /* Menší a plynulejší posun nahoru */
-            100% { transform: translateY(0) rotate(0deg); }
+        /* Specific filter for Discord and TikTok icons to make them white */
+        .option-btn img.white-icon {
+            filter: invert(100%); 
         }
         
-        .show-previous {
-            opacity: 1;
-        }
+        /* Removed .previous-count styling */
+        /* Removed .show-previous styling */
+        /* Removed @keyframes float */
         
-        .error-message {
-            color: #ff6b6b;
-            font-size: 15px;
-            margin-top: 15px;
+        /* Removed .error-message styling */
+
+        .prediction-table-container:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 12px 40px var(--shadow-strong);
+        }
+
+        .prediction-table-header {
+            font-size: 18px;
+            font-weight: 700;
+            color: var(--text);
+            margin-bottom: 8px;
+        }
+
+        .prediction-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 13px;
+            color: var(--text-secondary);
+        }
+
+        .prediction-table th, .prediction-table td {
+            padding: 8px 5px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
             text-align: center;
-            font-weight: 500; /* Trochu bold */
         }
 
-        /* Odometer specific styling from odometer-theme-minimal.css */
+        .prediction-table th {
+            background-color: rgba(0, 0, 0, 0.3);
+            color: var(--text);
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        #prediction-table-cz th {
+            background-color: var(--accent-cz);
+            color: #fff;
+        }
+        #prediction-table-sk th {
+            background-color: var(--accent-sk);
+            color: #fff;
+        }
+
+        .prediction-table tbody tr:nth-child(even) {
+            background-color: rgba(0, 0, 0, 0.1);
+        }
+
         .odometer.odometer-auto-theme,
         .odometer.odometer-theme-minimal {
             display: inline-block;
@@ -504,11 +602,11 @@
         /* Adjusted transition duration for Odometer.js */
         .odometer.odometer-auto-theme.odometer-animating-up .odometer-ribbon-inner,
         .odometer.odometer-theme-minimal.odometer-animating-up .odometer-ribbon-inner {
-            -webkit-transition: -webkit-transform 2s; /* Using 2s to match LOADING_DURATION */
-            -moz-transition: -moz-transform 2s;
-            -ms-transition: -ms-transform 2s;
-            -o-transition: -o-transform 2s;
-            transition: transform 2s;
+            -webkit-transition: -webkit-transform 2.0s; /* Změněno na 2s */
+            -moz-transition: -moz-transform 2.0s;
+            -ms-transition: -ms-transform 2.0s;
+            -o-transition: -o-transform 2.0s;
+            transition: transform 2.0s;
         }
         .odometer.odometer-auto-theme.odometer-animating-up.odometer-animating
             .odometer-ribbon-inner,
@@ -524,11 +622,11 @@
         .odometer.odometer-auto-theme.odometer-animating-down .odometer-ribbon-inner,
         .odometer.odometer-theme-minimal.odometer-animating-down
             .odometer-ribbon-inner {
-            -webkit-transition: -webkit-transform 2s; /* Using 2s to match LOADING_DURATION */
-            -moz-transition: -moz-transform 2s;
-            -ms-transition: -ms-transform 2s;
-            -o-transition: -o-transform 2s;
-            transition: transform 2s;
+            -webkit-transition: -webkit-transform 2.0s; /* Změněno na 2s */
+            -moz-transition: -moz-transform 2.0s;
+            -ms-transition: -ms-transform 2.0s;
+            -o-transition: -o-o-transform 2.0s;
+            transition: transform 2.0s;
         }
         .odometer.odometer-auto-theme.odometer-animating-down.odometer-animating
             .odometer-ribbon-inner {
@@ -553,125 +651,159 @@
         .odometer.odometer-theme-default .odometer-value {
             text-align: center;
         }
+
     </style>
 </head>
 <body>
-    <div class="dashboard" id="cz-dashboard">
-        <div class="loading-bar-container">
-            <div class="loading-bar" id="loading-bar-cz"></div>
+    <div class="main-content-wrappers">
+        <!-- Predikční tabulka pro ČR (přesunuta na první místo pro PC) -->
+        <div class="prediction-table-container" id="prediction-table-cz">
+            <div class="prediction-table-header">Predikce dalších milionů (ČR)</div>
+            <table class="prediction-table">
+                <thead>
+                    <tr>
+                        <th>Cíl (kliků)</th>
+                        <th>Odhadovaný čas</th>
+                    </tr>
+                </thead>
+                <tbody id="prediction-table-body-cz">
+                </tbody>
+            </table>
         </div>
-        
-        <div class="header">
-            <h1>
-                <img src="https://flagcdn.com/192x144/cz.png" class="flag" alt="Vlajka České republiky">
-                PopCat kliky – Česká republika
-            </h1>
-        </div>
-        
-        <div class="main-stat" id="main-stat-cz">
-            <div class="big-number odometer" id="click-count-cz">0</div>
-            <div class="stat-label">Celkem kliků</div>
-            <div id="error-message-cz" class="error-message"></div>
-        </div>
-        
-        <div class="stats-container">
-            <div class="pass-container" id="pass-container-cz">
-                <div class="stat-number odometer" id="clicks-to-pass-cz">0</div>
-                <div class="stat-label">Do předběhnutí další země</div>
-                <div class="competitor-info" id="competitor-info-cz"></div>
-            </div>
-            
-            <div class="row-container">
-                <div class="stat-card">
-                    <div class="stat-number" id="current-rank-cz">-</div>
-                    <div class="stat-label">Aktuální pořadí</div>
-                </div>
-                <div class="stat-card">
-                    <div class="stat-number odometer" id="clicks-1s-cz">0</div> 
-                    <div class="stat-label">Kliků / sekundu</div>
-                </div>
-            </div>
-            
-            <div class="goal-container" id="goal-container-cz">
-                <div class="stat-number odometer" id="next-goal-cz">1000000</div>
-                <div class="stat-label">Do dalšího milionu</div>
-            </div>
-        </div>
-        
-        <div class="progress-container">
-            <div class="progress-label">
-                <span>Pokrok k dalšímu milionu</span>
-                <span id="progress-percent-cz">0%</span>
-            </div>
-            <div class="progress-bar">
-                <div class="progress-fill" id="progress-fill-cz"></div>
-            </div>
-        </div>
-        
-        <div class="chart-container">
-            <canvas id="historyChart-cz"></canvas>
-        </div>
-        
-        <div class="options" style="display: none;"></div>
-    </div>
 
-    <div class="dashboard" id="sk-dashboard">
-        <div class="loading-bar-container">
-            <div class="loading-bar" id="loading-bar-sk"></div>
-        </div>
-        
-        <div class="header">
-            <h1>
-                <img src="https://flagcdn.com/192x144/sk.png" class="flag" alt="Vlajka Slovenska">
-                PopCat kliky – Slovensko
-            </h1>
-        </div>
-        
-        <div class="main-stat" id="main-stat-sk">
-            <div class="big-number odometer" id="click-count-sk">0</div>
-            <div class="stat-label">Celkem kliků</div>
-            <div id="error-message-sk" class="error-message"></div>
-        </div>
-        
-        <div class="stats-container">
-            <div class="pass-container" id="pass-container-sk">
-                <div class="stat-number odometer" id="clicks-to-pass-sk">0</div>
-                <div class="stat-label">Do předběhnutí další země</div>
-                <div class="competitor-info" id="competitor-info-sk"></div>
+        <!-- Dashboard pro ČR -->
+        <div class="dashboard" id="cz-dashboard">
+            <div class="loading-bar-container">
+                <div class="loading-bar" id="loading-bar-cz"></div>
             </div>
             
-            <div class="row-container">
-                <div class="stat-card">
-                    <div class="stat-number" id="current-rank-sk">-</div>
-                    <div class="stat-label">Aktuální pořadí</div>
+            <div class="header">
+                <h1>
+                    <img src="https://flagcdn.com/192x144/cz.png" class="flag" alt="Vlajka České republiky">
+                    PopCat kliky – Česká republika
+                </h1>
+            </div>
+            
+            <div class="main-stat" id="main-stat-cz">
+                <div class="big-number odometer" id="click-count-cz">0</div>
+                <div class="stat-label">Celkem kliků</div>
+            </div>
+            
+            <div class="stats-container">
+                <div class="pass-container" id="pass-container-cz">
+                    <div class="stat-number odometer" id="clicks-to-pass-cz">0</div>
+                    <div class="stat-label">Do předběhnutí další země</div>
+                    <div class="competitor-info" id="competitor-info-cz"></div>
                 </div>
-                <div class="stat-card">
-                    <div class="stat-number odometer" id="clicks-1s-sk">0</div> 
-                    <div class="stat-label">Kliků / sekundu</div>
+                
+                <div class="row-container">
+                    <div class="stat-card">
+                        <div class="stat-number" id="current-rank-cz">-</div>
+                        <div class="stat-label">Aktuální pořadí</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-number odometer" id="clicks-1s-cz">0</div> 
+                        <div class="stat-label">Kliků / sekundu</div>
+                    </div>
+                </div>
+                
+                <div class="goal-container" id="goal-container-cz">
+                    <div class="stat-number odometer" id="next-goal-cz">1000000</div>
+                    <div class="stat-label">Do dalšího milionu</div>
                 </div>
             </div>
             
-            <div class="goal-container" id="goal-container-sk">
-                <div class="stat-number odometer" id="next-goal-sk">1000000</div>
-                <div class="stat-label">Do dalšího milionu</div>
+            <div class="progress-container">
+                <div class="progress-label">
+                    <span>Pokrok k dalšímu milionu</span>
+                    <span id="progress-percent-cz">0%</span>
+                </div>
+                <div class="progress-bar">
+                    <div class="progress-fill" id="progress-fill-cz"></div>
+                </div>
+            </div>
+            
+            <div class="chart-container">
+                <canvas id="historyChart-cz"></canvas>
+            </div>
+            
+            <div class="options" style="display: none;"></div>
+        </div>
+
+        <!-- Dashboard pro SK -->
+        <div class="dashboard" id="sk-dashboard">
+            <div class="loading-bar-container">
+                <div class="loading-bar" id="loading-bar-sk"></div>
+            </div>
+            
+            <div class="header">
+                <h1>
+                    <img src="https://flagcdn.com/192x144/sk.png" class="flag" alt="Vlajka Slovenska">
+                    PopCat kliky – Slovensko
+                </h1>
+            </div>
+            
+            <div class="main-stat" id="main-stat-sk">
+                <div class="big-number odometer" id="click-count-sk">0</div>
+                <div class="stat-label">Celkem kliků</div>
+            </div>
+            
+            <div class="stats-container">
+                <div class="pass-container" id="pass-container-sk">
+                    <div class="stat-number odometer" id="clicks-to-pass-sk">0</div>
+                    <div class="stat-label">Do předběhnutí další země</div>
+                    <div class="competitor-info" id="competitor-info-sk"></div>
+                </div>
+                
+                <div class="row-container">
+                    <div class="stat-card">
+                        <div class="stat-number" id="current-rank-sk">-</div>
+                        <div class="stat-label">Aktuální pořadí</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-number odometer" id="clicks-1s-sk">0</div> 
+                        <div class="stat-label">Kliků / sekundu</div>
+                    </div>
+                </div>
+                
+                <div class="goal-container" id="goal-container-sk">
+                    <div class="stat-number odometer" id="next-goal-sk">1000000</div>
+                    <div class="stat-label">Do dalšího milionu</div>
+                </div>
+            </div>
+            
+            <div class="progress-container">
+                <div class="progress-label">
+                    <span>Pokrok k dalšímu milionu</span>
+                    <span id="progress-percent-sk">0%</span>
+                </div>
+                <div class="progress-bar">
+                    <div class="progress-fill" id="progress-fill-sk"></div>
+                </div>
+            </div>
+            
+            <div class="chart-container">
+                <canvas id="historyChart-sk"></canvas>
+            </div>
+            
+            <div class="options" style="display: none;"></div>
+        </div>
+
+        <!-- Predikční tabulka pro SK (přesunuta na poslední místo pro PC) -->
+        <div class="prediction-table-container" id="prediction-table-sk">
+            <div class="prediction-table-header">Predikce dalších milionů (SR)</div>
+            <table class="prediction-table">
+                <thead>
+                    <tr>
+                        <th>Cíl (kliků)</th>
+                        <th>Odhadovaný čas</th>
+                    </tr>
+                </thead>
+                <tbody id="prediction-table-body-sk">
+                        </tbody>
+                </table>
             </div>
         </div>
-        
-        <div class="progress-container">
-            <div class="progress-label">
-                <span>Pokrok k dalšímu milionu</span>
-                <span id="progress-percent-sk">0%</span>
-            </div>
-            <div class="progress-bar">
-                <div class="progress-fill" id="progress-fill-sk"></div>
-            </div>
-        </div>
-        
-        <div class="chart-container">
-            <canvas id="historyChart-sk"></canvas>
-        </div>
-        
-        <div class="options" style="display: none;"></div>
     </div>
 
     <div class="bottom-bar">
@@ -681,17 +813,17 @@
         </div>
 
         <a href="https://popcat.click" target="_blank" class="option-btn">
-            <img src="https://media.discordapp.net/attachments/1350485541505990726/1382047411236638900/Popcat-PNG-File.png?ex=6849bb74&is=684869f4&hm=37eff076997818e124211e1e71c7d10e0b1109c935f7c343bcb7b2c50744caaa&=&format=webp&quality=lossless" alt="PopCat Icon">
+            <img src="https://cdn.modrinth.com/data/Zu0Hp9am/126da18bf3228bd6c89450b1d79deb1480a5ba92_96.webp" alt="PopCat Ikona">
             Navštívit PopCat
         </a>
         
         <a href="https://discord.gg/nwxRMGrHqH" target="_blank" class="option-btn">
-            <img src="https://media.discordapp.net/attachments/1350485541505990726/1382045734907678782/image_1.png?ex=6849b9e4&is=68486864&hm=bcf517de94aa2fb03f5d5c4d242032bbd15408d6dee0426d81ca3bc8f10f3f61&=&format=webp&quality=lossless&width=1522&height=856" alt="Discord Ikona">
+            <img src="https://img.icons8.com/?size=100&id=Q524h6svpboS&format=png&color=000000" class="white-icon" alt="Discord Ikona">
             Discord
         </a>
 
         <a href="https://www.tiktok.com/@popcatczech" target="_blank" class="option-btn">
-            <img src="https://media.discordapp.net/attachments/1350485541505990726/1382046927637450792/image_2.png?ex=6849bb00&is=68486980&hm=e217695766515324226246150963ada7fef6b8a869ff6161e3f606b9109914b1&=&format=webp&quality=lossless&width=1522&height=856" alt="TikTok Ikona">
+            <img src="https://img.icons8.com/?size=100&id=123922&format=png&color=000000" class="white-icon" alt="TikTok Ikona">
             TikTok
         </a>
     </div>
@@ -699,24 +831,31 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/odometer.js/0.4.7/odometer.min.js"></script>
     <script>
-        const LOADING_DURATION = 2500; // Zpět na 2 sekundy
-        const maxHistoryPoints = 30;
+        const LOADING_DURATION = 3000; // Změněno na 3 sekundy
+        const PREDICTION_UPDATE_INTERVAL = 60 * 1000; // 1 minuta (60 sekund) pro predikční tabulku
+        const maxHistoryPoints = 30; // Pro graf
         const apiUrl = 'https://leaderboard.popcat.click/';
-        const proxyUrl = 'https://api.codetabs.com/v1/proxy/?quest='; 
+        
+        // Pouze jedna proxy konfigurace: CodeTabs
+        const proxyConfigs = [
+            { url: 'https://api.codetabs.com/v1/proxy/?quest=', type: 'query' }
+        ];
+        let currentProxyIndex = 0; 
 
         // Konfigurace pro jednotlivé země
         const countries = {
             'CZ': {
                 code: 'CZ',
                 name: 'Česká republika',
-                // Používám váš funkční PNG odkaz
                 flagUrl: 'https://flagcdn.com/192x144/cz.png', 
-                color: getComputedStyle(document.documentElement).getPropertyValue('--accent-cz'), // Zelená
-                lastCount: 0,
-                previousCount: 0,
+                color: getComputedStyle(document.documentElement).getPropertyValue('--accent-cz'), 
+                lastCount: 0, // Poslední ZOBRAZENÝ počet kliků (vždy nezáporný)
+                previousCount: 0, // Počet kliků z předchozího úspěšného načtení
                 historyData: [],
                 historyChart: null,
                 lastUpdateTime: null,
+                currentClicksPerSecond: 0, // Aktuálně zobrazené kliky/s
+                isInitialLoad: true, // Nový příznak pro první načtení
                 // DOM elements
                 clickCountEl: document.getElementById('click-count-cz'),
                 clicks1sEl: document.getElementById('clicks-1s-cz'),
@@ -727,29 +866,31 @@
                 currentRankEl: document.getElementById('current-rank-cz'),
                 clicksToPassEl: document.getElementById('clicks-to-pass-cz'),
                 competitorInfoEl: document.getElementById('competitor-info-cz'),
-                errorMessageEl: document.getElementById('error-message-cz'),
                 passContainerEl: document.getElementById('pass-container-cz'),
-                goalContainerEl: document.getElementById('goal-container-cz'),
+                goalContainerEl: document.getElementById('goal-container-cz'), 
                 loadingBarEl: document.getElementById('loading-bar-cz'),
                 chartCanvas: document.getElementById('historyChart-cz'),
+                predictionTableBodyEl: document.getElementById('prediction-table-body-cz'),
                 // Instance Odometeru
                 odometerClickCount: null,
                 odometerClicksToPass: null,
                 odometerNextGoal: null,
                 odometerClicks1s: null,
-                loadingBarTimeout: null
+                loadingBarTimeout: null,
+                predictionTableIntervalId: null 
             },
             'SK': {
                 code: 'SK',
                 name: 'Slovensko',
-                // Používám váš funkční PNG odkaz
                 flagUrl: 'https://flagcdn.com/192x144/sk.png', 
-                color: getComputedStyle(document.documentElement).getPropertyValue('--accent-sk'), // Modrá
-                lastCount: 0,
-                previousCount: 0,
+                color: getComputedStyle(document.documentElement).getPropertyValue('--accent-sk'), 
+                lastCount: 0, // Poslední ZOBRAZENÝ počet kliků (vždy nezáporný)
+                previousCount: 0, // Počet kliků z předchozího úspěšného načtení
                 historyData: [],
                 historyChart: null,
                 lastUpdateTime: null,
+                currentClicksPerSecond: 0, 
+                isInitialLoad: true, // Nový příznak pro první načtení
                 // DOM elements
                 clickCountEl: document.getElementById('click-count-sk'),
                 clicks1sEl: document.getElementById('clicks-1s-sk'),
@@ -760,58 +901,58 @@
                 currentRankEl: document.getElementById('current-rank-sk'),
                 clicksToPassEl: document.getElementById('clicks-to-pass-sk'),
                 competitorInfoEl: document.getElementById('competitor-info-sk'),
-                errorMessageEl: document.getElementById('error-message-sk'),
                 passContainerEl: document.getElementById('pass-container-sk'),
-                goalContainerEl: document.getElementById('goal-container-sk'),
+                goalContainerEl: document.getElementById('goal-container-sk'), 
                 loadingBarEl: document.getElementById('loading-bar-sk'),
                 chartCanvas: document.getElementById('historyChart-sk'),
+                predictionTableBodyEl: document.getElementById('prediction-table-body-sk'),
                 // Instance Odometeru
                 odometerClickCount: null,
                 odometerClicksToPass: null,
                 odometerNextGoal: null,
                 odometerClicks1s: null,
-                loadingBarTimeout: null
+                loadingBarTimeout: null,
+                predictionTableIntervalId: null 
             }
         };
 
-        let countryRankings = []; // Celkové pořadí zemí
-        let fetchIntervalId = null; // Globální ID intervalu pro načítání dat
-        let odometerLeaderboardClicks = null; // Nová instance Odometeru pro nejlepší zemi
+        let countryRankings = []; 
+        let fetchIntervalId = null; 
+        let odometerLeaderboardClicks = null; 
+
 
         // Inicializace Odometer instancí a grafů pro všechny země
         function initializeCountry(country) {
-            // Inicializace Odometer instancí s nastavením doby animace
             country.odometerClickCount = new Odometer({
                 el: country.clickCountEl,
                 value: 0,
                 format: '(,ddd)',
                 theme: 'minimal',
-                animation: LOADING_DURATION // Explicitní nastavení doby animace
+                animation: LOADING_DURATION 
             });
 
             country.odometerClicksToPass = new Odometer({
                 el: country.clicksToPassEl,
                 value: 0,
-                format: '(,ddd)', // Formát pro celá čísla s oddělovači tisíců
+                format: '(,ddd)',
                 theme: 'minimal',
-                animation: LOADING_DURATION // Explicitní nastavení doby animace
+                animation: LOADING_DURATION 
             });
 
             country.odometerNextGoal = new Odometer({
                 el: country.nextGoalEl,
                 value: 1000000,
-                format: '(,ddd)', // Formát pro celá čísla s oddělovači tisíců
+                format: '(,ddd)',
                 theme: 'minimal',
-                animation: LOADING_DURATION // Explicitní nastavení doby animace
+                animation: LOADING_DURATION 
             });
 
             country.odometerClicks1s = new Odometer({
                 el: country.clicks1sEl,
                 value: 0,
-                // Změna formátu pro Kliků / sekundu, aby nezobrazoval desetinná místa
-                format: '(,ddd)', 
+                format: '(d).d', // Formát pro desetinná místa
                 theme: 'minimal',
-                animation: LOADING_DURATION // Explicitní nastavení doby animace
+                animation: LOADING_DURATION 
             });
 
             initChart(country);
@@ -819,12 +960,10 @@
             country.loadingBarEl.style.backgroundColor = country.color;
             country.progressFillEl.style.backgroundColor = country.color;
             
-            // Nastavení barev pro pass-container (hover efekty zůstávají)
             country.passContainerEl.style.borderColor = hexToRgba(country.color, 0.5);
             country.passContainerEl.style.backgroundColor = hexToRgba(country.color, 0.15);
             country.passContainerEl.style.setProperty('--dynamic-shadow-color', hexToRgba(country.color, 0.4));
 
-            // Hover efekty pro pass-container
             country.passContainerEl.onmouseover = () => {
                 country.passContainerEl.style.boxShadow = `0 8px 25px ${hexToRgba(country.color, 0.4)}`;
                 country.passContainerEl.style.transform = 'translateY(-5px) scale(1.01)';
@@ -834,12 +973,10 @@
                 country.passContainerEl.style.transform = 'translateY(0) scale(1)';
             };
 
-            // Nastavení barev pro goal-container (hover efekty zůstávají)
             country.goalContainerEl.style.borderColor = hexToRgba(country.color, 0.5);
             country.goalContainerEl.style.backgroundColor = hexToRgba(country.color, 0.15);
             country.goalContainerEl.style.setProperty('--dynamic-shadow-color', hexToRgba(country.color, 0.4));
 
-            // Hover efekty pro goal-container
             country.goalContainerEl.onmouseover = () => {
                 country.goalContainerEl.style.boxShadow = `0 8px 25px ${hexToRgba(country.color, 0.4)}`;
                 country.goalContainerEl.style.transform = 'translateY(-5px) scale(1.01)';
@@ -848,6 +985,10 @@
                 country.goalContainerEl.style.boxShadow = '0 6px 15px var(--shadow-strong)'; 
                 country.goalContainerEl.style.transform = 'translateY(0) scale(1)';
             };
+
+            updatePredictionTable(country.code);
+            // Spouštění aktualizace predikční tabulky v samostatném intervalu
+            country.predictionTableIntervalId = setInterval(() => updatePredictionTable(country.code), PREDICTION_UPDATE_INTERVAL);
         }
 
         // Helper function to convert hex to rgba
@@ -866,28 +1007,25 @@
             return `rgba(${r}, ${g}, ${b}, ${alpha})`;
         }
 
-        // Precision loading bar control
+        // Precision loading bar control - upraveno pro okamžitý restart
         function resetLoadingBar(country) {
             if (country.loadingBarTimeout) {
                 clearTimeout(country.loadingBarTimeout);
             }
             
-            country.loadingBarEl.style.animation = 'none'; // Zastaví aktuální animaci
-            country.loadingBarEl.classList.remove('loading-bar-return'); // Odstraní třídu návratové animace
-            void country.loadingBarEl.offsetWidth; // Vynutí reflow pro aplikaci 'none'
+            country.loadingBarEl.style.animation = 'none';
+            country.loadingBarEl.classList.remove('loading-bar-return');
+            void country.loadingBarEl.offsetWidth; // Vynucení reflow pro okamžité použití 'animation: none'
 
-            // Pokud lišta není na začátku, animujte ji zpět
-            // Používáme pevné srovnání s 0.99, protože float porovnání může být nepřesné.
-            // Znamená to, že lišta je "téměř plná" a potřebuje se vrátit.
-            if (parseFloat(country.loadingBarEl.style.transform.replace('scaleX(', '').replace(')', '')) > 0.99) { 
+            // Pokud je lišta téměř plná, nejdříve spustíme rychlou "návratovou" animaci
+            // Jinak ji rovnou spustíme od začátku
+            if (parseFloat(getComputedStyle(country.loadingBarEl).transform.replace('scaleX(', '').replace(')', '')) > 0.99) { 
                 country.loadingBarEl.classList.add('loading-bar-return');
                 country.loadingBarTimeout = setTimeout(() => {
-                    // Po dokončení návratové animace spusťte animaci plnění
-                    country.loadingBarEl.classList.remove('loading-bar-bar-return'); 
+                    country.loadingBarEl.classList.remove('loading-bar-return');
                     country.loadingBarEl.style.animation = `loadingProgress ${LOADING_DURATION}ms linear forwards`;
-                }, 150); 
+                }, 150); // Doba trvání animace 'loadingReturn'
             } else {
-                // Pokud je lišta již na začátku nebo se teprve plní, spusťte rovnou animaci plnění
                 country.loadingBarEl.style.animation = `loadingProgress ${LOADING_DURATION}ms linear forwards`;
             }
         }
@@ -916,11 +1054,12 @@
                         borderWidth: 3,
                         fill: true,
                         tension: 0.4,
-                        pointRadius: 0,
-                        pointHoverRadius: 6,
-                        pointHoverBackgroundColor: country.color,
-                        pointHoverBorderColor: 'rgba(255, 255, 255, 0.8)',
-                        pointHoverBorderWidth: 2,
+                        pointRadius: 0, // Body jsou standardně neviditelné
+                        pointHoverRadius: 8, // Zvětšené pro snadnější najetí myší
+                        pointHitRadius: 12, // Zvětšená oblast detekce najetí myší
+                        pointBackgroundColor: country.color, // Barva bodu při najetí myší
+                        pointBorderColor: 'rgba(255, 255, 255, 0.8)', // Okraj bodu při najetí myší
+                        pointBorderWidth: 2,
                     }]
                 },
                 options: {
@@ -940,9 +1079,9 @@
                                 drawBorder: false
                             },
                             ticks: {
-                                color: '#ffffff', /* Explicitně nastavena bílá barva */
+                                color: '#ffffff',
                                 font: {
-                                    size: 12,
+                                    size: 13, // Increased font size for better readability
                                     family: 'Roboto'
                                 },
                                 callback: function(value, index, ticks) {
@@ -955,108 +1094,68 @@
                         legend: { display: false },
                         tooltip: {
                             backgroundColor: 'rgba(30, 30, 30, 0.9)',
-                            titleColor: 'var(--text)',
-                            bodyColor: 'var(--text-secondary)',
+                            titleColor: '#ffffff', // Explicitně bílá barva pro titulek tooltipu
+                            bodyColor: '#ffffff', // Explicitně bílá barva pro text tooltipu
                             borderColor: country.color,
                             borderWidth: 1,
                             cornerRadius: 8,
                             displayColors: false,
                             bodyFont: {
-                                size: 14,
+                                size: 13,
                                 family: 'Roboto',
                                 weight: '500'
                             },
                             titleFont: {
-                                size: 16,
+                                size: 15,
                                 family: 'Roboto',
                                 weight: '700'
                             },
-                            padding: 12,
+                            padding: 10,
                             callbacks: {
                                 label: function(context) {
                                     return `Kliky: ${formatNumber(context.parsed.y)}`;
                                 },
                                 title: function(context) {
-                                    return '';
+                                    return ''; // Removed default title as it was not needed
                                 }
                             }
                         }
                     },
                     animation: {
-                        duration: 1000,
+                        duration: LOADING_DURATION, // Doba animace se shoduje s LOADING_DURATION
                         easing: 'easeInOutQuad'
                     }
                 }
             });
         }
         
-        // Create a floating previous count bubble
-        function createPreviousCountBubble(country, count) {
-            if (count === 0) return;
-            
-            const bubble = document.createElement('div');
-            bubble.className = 'previous-count';
-            bubble.textContent = `+${formatNumber(count)}`;
-            bubble.style.color = country.color;
-            bubble.style.backgroundColor = hexToRgba(country.color, 0.3);
-            
-            country.mainStatEl.appendChild(bubble); // Připojit prvek nejprve pro získání přesných rozměrů
-
-            // Použít setTimeout s 0, aby se zajistilo, že prvek je vykreslen a má rozměry
-            setTimeout(() => {
-                const parentRect = country.mainStatEl.getBoundingClientRect();
-                const bubbleRect = bubble.getBoundingClientRect(); 
-
-                const statLabelEl = country.mainStatEl.querySelector('.stat-label');
-                const statLabelRect = statLabelEl.getBoundingClientRect();
-
-                // Výpočet pozice: pod textem "Celkem kliků"
-                // `statLabelRect.bottom - parentRect.top` dá pozici spodní hrany labelu vzhledem k topu rodiče (main-stat)
-                const newTop = (statLabelRect.bottom - parentRect.top) + 10; // 10px pod label
-                
-                // Centrování horizontálně v rámci main-stat
-                const newLeft = (parentRect.width - bubbleRect.width) / 2;
-
-                bubble.style.left = `${newLeft}px`;
-                bubble.style.top = `${newTop}px`;
-                
-                bubble.classList.add('show-previous');
-                
-                // Animace float-once trvá 1.5s, pak se začne ztrácet (opacity 0.4s)
-                // Takže celkem 1.5s + 0.4s = 1.9s, po které se element odstraní.
-                setTimeout(() => {
-                    bubble.classList.remove('show-previous'); // Spustí přechod opacity
-                    setTimeout(() => {
-                        if (bubble.parentNode) {
-                            bubble.parentNode.removeChild(bubble);
-                        }
-                    }, 400); // Počkat na dokončení přechodu opacity (0.4s)
-                }, 1500); // Počkat 1.5s, než začne blednout
-            }, 0); 
-        }
+        // Removed function createPreviousCountBubble
         
-        // Update chart with new data
+        // Aktualizace dat grafu
         function updateChartData(country, newValue) {
-            country.historyData.push(newValue);
-            if (country.historyData.length > maxHistoryPoints) {
-                country.historyData.shift();
-            }
-            
-            if (country.historyChart) {
-                country.historyChart.data.datasets[0].data = country.historyData;
-                country.historyChart.update();
+            // Pouze aktualizovat, pokud nejsme v počátečním načítání
+            if (!country.isInitialLoad) {
+                country.historyData.push(newValue);
+                if (country.historyData.length > maxHistoryPoints) {
+                    country.historyData.shift();
+                }
+                
+                if (country.historyChart) {
+                    country.historyChart.data.datasets[0].data = country.historyData; 
+                    country.historyChart.update();
+                }
             }
         }
         
-        // Format numbers with commas
+        // Formátování čísel s oddělovači tisíců (např. 1234567 -> 1,234,567)
         function formatNumber(num) {
             if (typeof num === 'number') {
-                return num.toLocaleString('en-US'); // Použijeme en-US pro oddělovače tisíců
+                return num.toLocaleString('en-US');
             }
-            return String(num); // Vrátíme jako string, pokud to není číslo
+            return String(num);
         }
 
-        // Format numbers for chart axis (M, B, T)
+        // Formátování čísel pro osu grafu (např. 1.2M, 3.5B)
         function formatNumberForChart(num) {
             if (num >= 1000000000000) {
                 return (num / 1000000000000).toFixed(1).replace(/\.0$/, '') + 'T';
@@ -1067,21 +1166,29 @@
             if (num >= 1000000) {
                 return (num / 1000000).toFixed(1).replace(/\.0$/, '') + 'M';
             }
+            if (num >= 1000) {
+                return (num / 1000).toFixed(0) + 'K';
+            }
             return num.toLocaleString('en-US');
         }
         
-        // Calculate and update averages
-        function updateAverages(country, pointsGained, secondsPassed) {
-            if (secondsPassed > 0) {
-                const ratePerSecond = pointsGained / secondsPassed;
-                // Zaokrouhlíme na nejbližší celé číslo
-                country.odometerClicks1s.update(Math.round(ratePerSecond));
-            } else {
-                country.odometerClicks1s.update(0); 
+        // Aktualizuje zobrazení kliků za sekundu
+        function updateClicksPerSecondDisplay(country, pointsGained, timeDiff) {
+            // Pouze aktualizovat, pokud nejsme v počátečním načítání
+            if (!country.isInitialLoad) {
+                if (pointsGained > 0 && timeDiff > 0) {
+                    const ratePerSecond = pointsGained / timeDiff;
+                    // Formátování pro zobrazení desetinných míst, pokud je hodnota menší než 1
+                    const formattedValue = ratePerSecond < 1 ? 
+                        ratePerSecond.toFixed(1).replace('0.', '.') : // např. 0.5 -> .5
+                        Math.round(ratePerSecond * 10) / 10; // Zaokrouhlení na jedno desetinné místo
+                    country.odometerClicks1s.update(formattedValue);
+                }
+                // Pokud není nárůst kliků nebo je neplatný časový rozdíl, hodnota se nemění.
             }
         }
         
-        // Update progress bar and next goal countdown
+        // Aktualizace ukazatele pokroku a odpočtu do dalšího milionu
         function updateProgress(country, current) {
             const currentMillion = Math.floor(current / 1000000);
             const nextGoal = 1000000 * (currentMillion + 1);
@@ -1094,7 +1201,7 @@
             country.progressPercentEl.textContent = `${Math.round(progress)}%`;
         }
         
-        // Update country ranking and competitor info for a specific country
+        // Aktualizace pořadí země a informací o konkurentovi
         function updateCountryRanking(targetCountry, allData) {
             countryRankings = Object.keys(allData).map(code => ({
                 code,
@@ -1103,6 +1210,7 @@
             
             const targetCountryData = allData[targetCountry.code];
             if (typeof targetCountryData !== 'number') {
+                console.warn(`Data pro ${targetCountry.name} chybí nebo jsou neplatná v updateCountryRanking.`);
                 targetCountry.currentRankEl.textContent = '-';
                 targetCountry.odometerClicksToPass.update(0); 
                 targetCountry.competitorInfoEl.textContent = "Data nejsou k dispozici"; 
@@ -1121,7 +1229,7 @@
                     
                     targetCountry.odometerClicksToPass.update(clicksNeeded); 
                     
-                    // Změněno na funkční odkaz s PNG, jak jste specifikoval
+                    // Zajištění použití plného názvu země pro CZ i SK
                     targetCountry.competitorInfoEl.innerHTML = `
                         <img src="https://flagcdn.com/192x144/${competitor.code.toLowerCase()}.png" class="small-flag" alt="${getCountryName(competitor.code)}">
                         ${getCountryName(competitor.code)}
@@ -1135,7 +1243,6 @@
                         targetCountry.passContainerEl.style.border = `1px solid ${hexToRgba(targetCountry.color, 0.5)}`;
                     }
                 } else {
-                    // Je na prvním místě
                     targetCountry.odometerClicksToPass.update(0); 
                     targetCountry.competitorInfoEl.textContent = "Jste na 1. místě!"; 
                     targetCountry.passContainerEl.style.backgroundColor = hexToRgba(targetCountry.color, 0.35);
@@ -1144,7 +1251,7 @@
             }
         }
         
-        // Get country name from country code
+        // Získání názvu země z kódu země
         function getCountryName(code) {
             const countryNames = {
                 'CZ': 'Česká republika',
@@ -1169,23 +1276,38 @@
                 'FI': 'Finsko',
                 'NO': 'Norsko',
                 'DK': 'Dánsko',
-                // Přidejte další země, pokud je potřebujete zobrazit
+                // Přidejte další země dle potřeby
+                'CH': 'Švýcarsko', 'AT': 'Rakousko', 'BE': 'Belgie', 'IE': 'Irsko', 'MX': 'Mexiko',
+                'AR': 'Argentina', 'CL': 'Chile', 'ZA': 'Jihoafrická republika', 'EG': 'Egypt', 'SA': 'Saúdská Arábie',
+                'AE': 'Spojené arabské emiráty', 'CN': 'Čína', 'ID': 'Indonésie', 'MY': 'Malajsie', 'PH': 'Filipíny',
+                'VN': 'Vietnam', 'TH': 'Thajsko', 'SG': 'Singapur', 'NZ': 'Nový Zéland', 'GR': 'Řecko',
+                'PT': 'Portugalsko', 'BG': 'Bulharsko', 'RO': 'Rumunsko', 'HU': 'Maďarsko', 'UA': 'Ukrajina',
+                'BY': 'Bělorusko', 'KZ': 'Kazachstán', 'UZ': 'Uzbekistán', 'PK': 'Pákistán', 'BD': 'Bangladéš',
+                'NG': 'Nigérie', 'KE': 'Keňa', 'ET': 'Etiopie', 'DZ': 'Alžírsko', 'MA': 'Maroko',
+                'PE': 'Peru', 'CO': 'Kolumbie', 'VE': 'Venezuela', 'EC': 'Ekvádor', 'GT': 'Guatemala',
+                'CU': 'Kuba', 'DO': 'Dominikánská republika', 'PR': 'Portoriko', 'HR': 'Chorvatsko', 'RS': 'Srbsko',
+                'BA': 'Bosna a Hercegovina', 'SI': 'Slovinsko', 'MK': 'Severní Makedonie', 'AL': 'Albánie', 'MD': 'Moldavsko',
+                'LT': 'Litva', 'LV': 'Lotyšsko', 'EE': 'Estonsko', 'IS': 'Island', 'LU': 'Lucembursko',
+                'MT': 'Malta', 'CY': 'Kypr', 'GE': 'Gruzie', 'AM': 'Arménie', 'AZ': 'Ázerbájdžán',
+                'KG': 'Kyrgyzstán', 'TM': 'Turkmenistán', 'IR': 'Írán', 'IQ': 'Irák', 'SY': 'Sýrie',
+                'LB': 'Libanon', 'JO': 'Jordánsko', 'IL': 'Izrael', 'PS': 'Palestina', 'KW': 'Kuvajt',
+                'QA': 'Katar', 'BH': 'Bahrajn', 'OM': 'Omán', 'YE': 'Jemen', 'AF': 'Afghánistán',
+                'NP': 'Nepál', 'LK': 'Srí Lanka', 'MN': 'Mongolsko', 'LA': 'Laos', 'KH': 'Kambodža',
+                'MM': 'Myanmar', 'BN': 'Brunej', 'TL': 'Východní Timor', 'PG': 'Papua-Nová Guinea', 'SB': 'Šalomounovy ostrovy',
+                'FJ': 'Fidži', 'VU': 'Vanuatu', 'NC': 'Nová Kaledonie', 'FM': 'Mikronésie', 'MH': 'Marshallovy ostrovy',
+                'KI': 'Kiribati', 'NR': 'Nauru', 'PW': 'Palau', 'WS': 'Samoa', 'TO': 'Tonga', 'TV': 'Tuvalu'
             };
             return countryNames[code] || code;
         }
         
-        // Get ordinal suffix for numbers
+        // Získání řadové přípony pro čísla (např. 1. místo, 2. místo)
         function getNumberSuffix(num) {
-            // Pro češtinu stačí tečka za číslem
             return '.'; 
         }
         
-        // Show error message
-        function showError(country, message) {
-            country.errorMessageEl.textContent = message;
-        }
-
-        // Update the top country in the bottom bar
+        // Removed showError function
+        
+        // Aktualizace nejlepší země v dolní liště
         function updateLeaderboardTopCountry() {
             const leaderboardFlagEl = document.getElementById('leaderboard-flag');
             const leaderboardCountryNameEl = document.getElementById('leaderboard-country-name');
@@ -1199,7 +1321,6 @@
                 leaderboardFlagEl.alt = `${getCountryName(topCountry.code)} Vlajka`;
                 leaderboardCountryNameEl.textContent = getCountryName(topCountry.code);
 
-                // Inicializace Odometeru pro leaderboard-clicks, pokud ještě nebyl inicializován
                 if (!odometerLeaderboardClicks) {
                     odometerLeaderboardClicks = new Odometer({
                         el: leaderboardClicksEl,
@@ -1214,106 +1335,184 @@
                 leaderboardTopCountryContainer.innerHTML = '<span style="color: var(--text-secondary);">Načítám data o zemích...</span>';
             }
         }
+
+        // Predikce a aktualizace tabulky pro konkrétní zemi
+        function updatePredictionTable(countryCode) {
+            const country = countries[countryCode];
+            if (!country) return;
+
+            country.predictionTableBodyEl.innerHTML = '';
+
+            const currentClicks = country.lastCount;
+            // Používá aktuálně zobrazené kliky za sekundu pro predikce
+            const clicksPerSecond = country.currentClicksPerSecond; 
+
+            const now = new Date();
+
+            // Změněno na 7 řádků pro kratší predikce
+            for (let i = 0; i < 7; i++) {
+                const currentMillionFloor = Math.floor(currentClicks / 1000000);
+                const targetMillionValue = (currentMillionFloor + 1 + i) * 1000000;
+                
+                const clicksNeeded = targetMillionValue - currentClicks;
+
+                let timeToReach = 'N/A';
+                if (clicksPerSecond > 0 && clicksNeeded > 0) {
+                    const seconds = clicksNeeded / clicksPerSecond;
+                    const predictedDate = new Date(now.getTime() + seconds * 1000);
+                    timeToReach = predictedDate.toLocaleString('cs-CZ', { 
+                        hour: '2-digit', 
+                        minute: '2-digit', 
+                        second: '2-digit' 
+                    });
+                } else if (clicksNeeded <= 0) {
+                    timeToReach = 'Již dosaženo';
+                } else if (clicksPerSecond === 0 && currentClicks > 0) {
+                    timeToReach = 'Chybí kliky/s';
+                } else if (currentClicks === 0 && clicksPerSecond === 0) {
+                    timeToReach = 'N/A (žádné kliky)';
+                }
+
+                const row = country.predictionTableBodyEl.insertRow(); 
+                row.insertCell().textContent = formatNumber(targetMillionValue);
+                row.insertCell().textContent = timeToReach;
+            }
+        }
         
-        // Fetch data from API for all countries and update individual dashboards
+        // Načítání dat z API pro všechny země a aktualizace dashboardů
         async function fetchAllClicks() {
             if (fetchIntervalId !== null) {
                 clearInterval(fetchIntervalId);
             }
 
             let data = null; 
-            let currentResponse = null; 
+            let fetchSuccessful = false; 
 
-            try {
-                for (const key in countries) {
-                    resetLoadingBar(countries[key]);
-                    countries[key].errorMessageEl.textContent = '';
-                }
-                
-                const fetchUrl = proxyUrl + encodeURIComponent(apiUrl);
-                console.log('Pokus o načtení dat z:', fetchUrl); 
-                
-                currentResponse = await fetch(fetchUrl); 
-                
-                if (!currentResponse.ok) {
-                    const errorText = await currentResponse.text();
-                    console.error(`Chyba HTTP! Stav: ${currentResponse.status}, odpověď: ${errorText}`); 
-                    if (errorText.startsWith('<!DOCTYPE html>') || errorText.startsWith('<html')) {
-                         throw new Error(`Chyba proxy: Obdrženo HTML místo JSON.${currentResponse.status ? ` Stav: ${currentResponse.status}.` : ''} Zkuste to prosím znovu za chvíli, proxy server může mít problémy.`); 
-                    }
-                    throw new Error(`Chyba HTTP! Stav: ${currentResponse.status}.`); 
-                }
-                
-                data = await currentResponse.json(); 
-                console.log('Obdržena data:', data); 
-                
-                if (!data || typeof data !== 'object') {
-                    console.error('Neplatný formát dat z API:', data); 
-                    throw new Error('Neplatný formát dat z API.'); 
-                }
+            // Resetovat lišty načítání před novým pokusem (chybové zprávy se již nebudou zobrazovat)
+            for (const key in countries) {
+                resetLoadingBar(countries[key]); 
+            }
 
-                countryRankings = Object.keys(data).map(code => ({
-                    code,
-                    clicks: data[code]
-                })).sort((a, b) => b.clicks - a.clicks);
-                
-                for (const countryCode in countries) {
-                    const country = countries[countryCode];
-                    const newCount = data[countryCode];
+            try { // Hlavní try blok pro celou logiku fetchAllClicks
+                // Prochází konfigurace proxy serverů, dokud nenajde funkční
+                // Nyní je zde pouze jedna proxy
+                for (let i = 0; i < proxyConfigs.length; i++) {
+                    const activeProxyConfig = proxyConfigs[i];
+                    let fetchUrl;
 
-                    if (typeof newCount !== 'number') {
-                        console.warn(`Data pro ${country.name} chybí nebo jsou neplatná. Obdrženo:`, newCount); 
-                        showError(country, `Data pro ${country.name} chybí nebo jsou neplatná.`); 
-                        continue; 
+                    if (activeProxyConfig.type === 'query') {
+                        fetchUrl = activeProxyConfig.url + encodeURIComponent(apiUrl);
+                    } else { // type === 'path'
+                        fetchUrl = activeProxyConfig.url + apiUrl; 
                     }
 
-                    const now = new Date();
-                    
-                    // Pouze pokud existuje předchozí stav a došlo ke změně
-                    if (country.lastCount > 0 && country.lastUpdateTime) {
-                        const timeDiff = (now - country.lastUpdateTime) / 1000;
-                        const pointsGained = newCount - country.lastCount;
+                    console.log(`Pokouším se načíst data z: ${fetchUrl} (používám proxy ${i + 1}/${proxyConfigs.length})`);
 
-                        const actualPointsGained = Math.max(0, pointsGained);
-                        
-                        updateAverages(country, actualPointsGained, timeDiff); 
-                        
-                        // Bublina se zobrazí pouze pro přírůstky PO počátečním načtení
-                        if (actualPointsGained > 0) {
-                            createPreviousCountBubble(country, actualPointsGained);
+                    try {
+                        const currentResponse = await fetch(fetchUrl);
+
+                        if (!currentResponse.ok) {
+                            console.warn(`HTTP chyba pro proxy ${activeProxyConfig.url}: Stav ${currentResponse.status}.`);
+                            continue; 
                         }
-                    } else { // Při prvním načtení nebo po resetu/chybě
-                        updateAverages(country, 0, 1); // Nastaví průměry na 0 nebo na počáteční hodnotu
-                        // NEVOLAT createPreviousCountBubble(country, newCount); zde, aby se nezobrazila při startu
-                    }
-                    
-                    country.previousCount = country.lastCount;
-                    country.lastCount = newCount;
-                    country.lastUpdateTime = now;
-                    
-                    // Aktualizace hlavní počítadla
-                    country.odometerClickCount.update(newCount);
-                    
-                    updateProgress(country, newCount); 
-                    updateChartData(country, newCount);
 
-                    updateCountryRanking(country, data); 
-                }
-                updateLeaderboardTopCountry(); // Update the top country in the bottom bar
-                
-            } catch (error) {
-                console.error(`Globální chyba při načítání dat:`, error); 
-                for (const key in countries) {
-                    let errorMessage = `Chyba při aktualizaci dat pro ${countries[key].name}. Zkouším znovu...`;
-                    if (error.message.includes('Unexpected token') || error.message.includes('Proxy error')) {
-                        const statusInfo = currentResponse ? ` Stav: ${currentResponse.status}.` : '';
-                        errorMessage = `Chyba proxy: Obdrženo HTML místo JSON.${statusInfo} Zkuste to prosím znovu za chvíli, proxy server může mít problémy.`;
-                    } else {
-                         errorMessage = `Neznámá chyba: ${error.message}. Zkouším znovu...`;
+                        const contentType = currentResponse.headers.get('content-type');
+                        if (!contentType || !contentType.includes('application/json')) {
+                            const responseText = await currentResponse.text();
+                            console.warn(`Proxy ${activeProxyConfig.url} vrátila neočekávaný Content-Type nebo HTML:`, contentType, responseText.substring(0, 200)); 
+                            continue; 
+                        }
+
+                        const fetchedData = await currentResponse.json(); 
+                        if (!fetchedData || typeof fetchedData !== 'object') {
+                            console.warn(`Neplatný formát dat z API pro proxy ${activeProxyConfig.url}:`, fetchedData); 
+                            continue; 
+                        }
+                        console.log(`Úspěšně načtena data z proxy: ${activeProxyConfig.url}`);
+                        data = fetchedData; 
+                        fetchSuccessful = true; 
+                        break; // Úspěšně načteno, ukončíme cyklus proxy
+                    } catch (error) {
+                        console.warn(`Chyba při načítání dat pomocí proxy ${activeProxyConfig.url}:`, error);
                     }
-                    showError(countries[key], errorMessage);
                 }
-            } finally {
+
+                if (fetchSuccessful && data) { 
+                    countryRankings = Object.keys(data).map(code => ({
+                        code,
+                        clicks: data[code]
+                    })).sort((a, b) => b.clicks - a.clicks);
+                    
+                    for (const countryCode in countries) {
+                        const country = countries[countryCode];
+                        const newCount = data[countryCode];
+
+                        if (typeof newCount !== 'number') {
+                            console.warn(`Data pro ${country.name} chybí nebo jsou neplatná. Obdrženo:`, newCount); 
+                            // Set to default values without error message
+                            country.currentRankEl.textContent = '-';
+                            country.odometerClicksToPass.update(0);
+                            country.competitorInfoEl.textContent = "Data nejsou k dispozici";
+                            // I na první načtení nastavíme isInitialLoad na false, pokud jsou data špatná, abychom se nesnažili přidat nesmyslné hodnoty
+                            country.isInitialLoad = false; 
+                            continue; 
+                        }
+
+                        const now = new Date();
+                        let pointsGained = 0;
+                        let timeDiff = 0;
+
+                        // Vypočet časového rozdílu pro 'kliky za sekundu'
+                        if (country.lastUpdateTime) {
+                            timeDiff = (now - country.lastUpdateTime) / 1000;
+                        } else {
+                            timeDiff = LOADING_DURATION / 1000; // Výchozí pro první načtení, ale nebude použito kvůli isInitialLoad
+                        }
+
+                        // Aktualizace jen pokud nejsme v počátečním načítání
+                        if (newCount >= country.lastCount) {
+                            pointsGained = newCount - country.lastCount;
+                            country.odometerClickCount.update(newCount); // Aktualizace zobrazeného počtu
+                        } else {
+                            console.warn(`Načtený počet pro ${country.name} (${newCount}) je nižší než současný (${country.lastCount})..`);
+                            pointsGained = 0; 
+                        }
+
+                        // Vždy aktualizujeme předchozí a poslední počty pro správné sledování
+                        country.previousCount = country.lastCount;
+                        country.lastCount = newCount; 
+                        country.lastUpdateTime = now; 
+
+                        updateProgress(country, country.lastCount); 
+                        
+                        // Aktualizace grafu a kliků za sekundu pouze pokud NENÍ počáteční načtení
+                        if (!country.isInitialLoad) {
+                            updateChartData(country, country.lastCount);
+                            updateClicksPerSecondDisplay(country, pointsGained, timeDiff > 0 ? timeDiff : 1);
+                        } else {
+                            // Pro první načtení pouze inicializujeme graf s aktuální hodnotou, ale nepřidáváme jako "změnu"
+                            country.historyData = [newCount];
+                            if (country.historyChart) {
+                                country.historyChart.data.datasets[0].data = country.historyData;
+                                country.historyChart.update();
+                            }
+                            country.odometerClicks1s.update(0); // Nastavíme na 0 při prvním načtení
+                        }
+                        
+                        country.isInitialLoad = false; // Po prvním zpracování dat označíme jako ne-počáteční načtení
+                        
+                        updateCountryRanking(country, data); 
+                    }
+                    updateLeaderboardTopCountry(); 
+                    
+                } else {
+                    console.error('Všechny proxy servery selhaly po opakovaných pokusech. Nepodařilo se načíst data.');
+                    // No UI update for errors. Elements will retain last known values.
+                }
+            } catch (globalError) { // Globální catch blok pro všechny chyby
+                console.error(`Globální chyba při načítání dat:`, globalError); 
+                // No UI update for errors. Elements will retain last known values.
+            } finally { // Finální blok, který se vždy provede
                 fetchIntervalId = setInterval(fetchAllClicks, LOADING_DURATION);
                 console.log(`Další načítání naplánováno za ${LOADING_DURATION / 1000} sekund.`); 
             }
@@ -1323,7 +1522,6 @@
             initializeCountry(countries.CZ);
             initializeCountry(countries.SK);
             
-            // Inicializace Odometeru pro leaderboard-clicks element, který už v DOM existuje
             const leaderboardClicksEl = document.getElementById('leaderboard-clicks');
             if (leaderboardClicksEl) {
                 odometerLeaderboardClicks = new Odometer({
