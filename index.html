@@ -641,14 +641,16 @@
         .prediction-table {
             width: 100%;
             border-collapse: collapse;
-            font-size: 13px;
             color: var(--text-secondary);
         }
 
         .prediction-table th, .prediction-table td {
+            font-size: clamp(10px, 2.5vw, 13px); /* Make font size responsive */
             padding: 8px 5px;
             border-bottom: 1px solid rgba(255, 255, 255, 0.1);
             text-align: center;
+            white-space: nowrap; /* Prevent numbers from wrapping */
+            overflow: hidden; /* Hide overflow if text is still too long */
         }
 
         #prediction-table-cz th {
@@ -852,11 +854,9 @@
         const MAX_CPS_HISTORY_POINTS = 5; // Konstanta pro délku historie pro průměr CPS
         const apiUrl = 'https://leaderboard.popcat.click/';
         
-        // Proxy konfigurace - Nyní s více možnostmi
+        // Proxy konfigurace - Pouze CodeTabs dle požadavku
         const proxyConfigs = [
-            { url: 'https://api.codetabs.com/v1/proxy/?quest=', type: 'query' },
-            { url: 'https://corsproxy.io/?', type: 'query' }, // Záložní proxy 1
-            { url: 'https://thingproxy.freeboard.io/fetch/', type: 'query' } // Záložní proxy 2
+            { url: 'https://api.codetabs.com/v1/proxy/?quest=', type: 'query' }
         ];
 
         // Konfigurace pro jednotlivé země
@@ -866,8 +866,8 @@
                 name: 'Česká republika',
                 flagUrl: 'https://flagcdn.com/192x144/cz.png', 
                 color: getComputedStyle(document.documentElement).getPropertyValue('--accent-cz'), 
-                lastCount: 0, // Poslední ZOBRAZENÝ počet kliků (vždy nezáporný)
-                previousCount: 0, // Počet kliků z předchozího úspěšného načtení
+                lastCount: 0, // Poslední skutečně načtený počet kliků z API (může kolísat)
+                displayedCount: 0, // Poslední ZOBRAZENÝ počet kliků (vždy nezáporný, stabilizovaný)
                 historyData: [], // Historie pro graf
                 clicksPerSecondHistory: [], // Pole pro historii kliků za sekundu pro průměr
                 historyChart: null,
@@ -903,8 +903,8 @@
                 name: 'Slovensko',
                 flagUrl: 'https://flagcdn.com/192x144/sk.png', 
                 color: getComputedStyle(document.documentElement).getPropertyValue('--accent-sk'), 
-                lastCount: 0, // Poslední ZOBRAZENÝ počet kliků (vždy nezáporný)
-                previousCount: 0, // Počet kliků z předchozího úspěšného načtení
+                lastCount: 0, // Poslední skutečně načtený počet kliků z API
+                displayedCount: 0, // Poslední ZOBRAZENÝ počet kliků (vždy nezáporný, stabilizovaný)
                 historyData: [],
                 clicksPerSecondHistory: [], // Pole pro historii kliků za sekundu pro průměr
                 historyChart: null,
@@ -1152,7 +1152,9 @@
         
         // Aktualizace dat grafu
         function updateChartData(country, newValue) {
-            country.historyData.push(newValue);
+            // Graf vždy zobrazuje stabilizovanou hodnotu, aby neklesal
+            const valueToPlot = Math.max(country.displayedCount, newValue);
+            country.historyData.push(valueToPlot);
             if (country.historyData.length > maxHistoryPoints) {
                 country.historyData.shift();
             }
@@ -1353,6 +1355,7 @@
 
             country.predictionTableBodyEl.innerHTML = '';
 
+            // Používáme skutečně načtený poslední počet pro predikce
             const currentClicks = country.lastCount;
             // Používá průměrné kliky za sekundu pro predikce
             const clicksPerSecondForPrediction = country.averageClicksPerSecond; 
@@ -1454,15 +1457,15 @@
                     
                     for (const countryCode in countries) {
                         const country = countries[countryCode];
-                        const newCount = data[countryCode];
+                        const newFetchedCount = data[countryCode]; // Skutečně načtený počet z API
 
-                        if (typeof newCount !== 'number') {
-                            console.warn(`Data pro ${country.name} chybí nebo jsou neplatná. Obdrženo:`, newCount); 
+                        if (typeof newFetchedCount !== 'number' || newFetchedCount < 0) {
+                            console.warn(`Data pro ${country.name} chybí, jsou neplatná nebo záporná. Obdrženo:`, newFetchedCount);
                             country.currentRankEl.textContent = '-';
                             country.odometerClicksToPass.update(0);
                             country.competitorInfoEl.textContent = "Data nejsou k dispozici";
-                            country.isInitialLoad = false; // Even if data is bad, it's not the "first" attempt for CPS logic
-                            continue; 
+                            country.isInitialLoad = false;
+                            continue;
                         }
 
                         const now = new Date();
@@ -1470,25 +1473,24 @@
                         let timeDiffSeconds = 0;
 
                         if (country.isInitialLoad) {
-                            // Pro první načtení vynulujeme a nezapočítáváme do historie CPS
                             country.currentClicksPerSecond = 0;
                             country.averageClicksPerSecond = 0;
-                            country.clicksPerSecondHistory = []; // Zajistí čistou historii
-                            updateClicksPerSecondDisplay(country, 0); // Zobrazí 0 pro CPS
+                            country.clicksPerSecondHistory = [];
+                            updateClicksPerSecondDisplay(country, 0);
                             console.log(`Počáteční načítání pro ${country.name}. CPS dočasně nastaveno na 0.`);
+                            country.lastCount = newFetchedCount; // Nastaví počáteční hodnotu pro další výpočty
+                            country.displayedCount = newFetchedCount; // Nastaví počáteční zobrazenou hodnotu
                         } else {
-                            // Pro následná načítání počítáme CPS normálně
                             if (country.lastUpdateTime) {
                                 timeDiffSeconds = (now - country.lastUpdateTime) / 1000;
-                                rawPointsGained = newCount - country.lastCount; 
-                                if (rawPointsGained < 0) { // Započítáváme pouze kladný nárůst pro CPS
-                                    console.warn(`Načtený počet pro ${country.name} (${newCount}) je nižší než předchozí (${country.lastCount}). Ignoruji negativní nárůst pro výpočet kliků/s.`);
+                                rawPointsGained = newFetchedCount - country.lastCount; 
+                                if (rawPointsGained < 0) { 
+                                    console.warn(`Načtený počet pro ${country.name} (${newFetchedCount}) je nižší než předchozí (${country.lastCount}). Ignoruji negativní nárůst pro výpočet kliků/s.`);
                                     rawPointsGained = 0;
                                 }
                             } else {
-                                // Záložní možnost, pokud lastUpdateTime chybí i po prvním načtení
                                 timeDiffSeconds = LOADING_DURATION / 1000;
-                                rawPointsGained = newCount - country.lastCount; 
+                                rawPointsGained = newFetchedCount - country.lastCount;
                                 if (rawPointsGained < 0) rawPointsGained = 0;
                             }
                             timeDiffSeconds = Math.max(1, timeDiffSeconds); // Zabrání dělení nulou
@@ -1496,7 +1498,6 @@
                             let currentIntervalRate = rawPointsGained / timeDiffSeconds;
                             country.currentClicksPerSecond = currentIntervalRate;
 
-                            // Přidáme do historie pouze platné hodnoty CPS
                             if (currentIntervalRate >= 0) { 
                                 country.clicksPerSecondHistory.push(currentIntervalRate);
                                 if (country.clicksPerSecondHistory.length > MAX_CPS_HISTORY_POINTS) {
@@ -1504,22 +1505,24 @@
                                 }
                             }
 
-                            // Vypočítáme průměrné CPS pro predikce
                             const sumCps = country.clicksPerSecondHistory.reduce((a, b) => a + b, 0);
                             country.averageClicksPerSecond = sumCps / country.clicksPerSecondHistory.length || 0; 
                             updateClicksPerSecondDisplay(country, country.currentClicksPerSecond);
                         }
 
-                        // Vždy aktualizujeme lastCount a lastUpdateTime, bez ohledu na isInitialLoad
-                        country.odometerClickCount.update(Math.max(country.odometerClickCount.value, newCount)); 
-                        country.lastCount = newCount;
+                        // Aktualizace hlavní zobrazené hodnoty (pouze roste nebo zůstává)
+                        country.odometerClickCount.update(Math.max(country.displayedCount, newFetchedCount)); 
+                        country.displayedCount = Math.max(country.displayedCount, newFetchedCount); // Udržuje stabilní zobrazenou hodnotu
+                        
+                        // Aktualizace skutečně načtené hodnoty pro budoucí výpočty CPS
+                        country.lastCount = newFetchedCount;
                         country.lastUpdateTime = now;
 
-                        updateProgress(country, country.lastCount); 
-                        updateChartData(country, country.lastCount); 
-                        updateCountryRanking(country, data); 
-
-                        country.isInitialLoad = false; // Nastavíme na false pro další cyklus
+                        updateProgress(country, country.lastCount); // Používá skutečně načtenou hodnotu
+                        updateChartData(country, country.lastCount); // Používá stabilizovanou hodnotu pro graf
+                        updateCountryRanking(country, data); // Používá skutečná data pro řazení zemí
+                        
+                        country.isInitialLoad = false;
                     }
                     updateLeaderboardTopCountry(); 
                     
