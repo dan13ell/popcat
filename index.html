@@ -276,13 +276,15 @@
 
         /* Zmenšování písma pro menší obrazovky, ale pouze tam, kde je to nezbytně nutné */
         @media (max-width: 768px) {
-            /* Většinu Odometer stylů ponechávám pevných, zde jen pro velmi malé obrazovky */
+            /* Hlavní číslo: Agresivnější zmenšení a adaptace */
             .big-number {
-                font-size: clamp(28px, 8vw, 65px); /* Vylepšeno: Agresivnější zmenšení */
+                font-size: clamp(28px, 6vw, 65px); /* Upraveno pro lepší fit a čitelnost */
             }
+            /* Ostatní čísla (ponecháno tak, jak bylo v předchozí verzi, která se vám líbila) */
             .stat-number {
-                font-size: clamp(16px, 5vw, 32px); /* Vylepšeno: Agresivnější zmenšení */
+                font-size: clamp(16px, 5vw, 32px); 
             }
+            /* Padding pro tlačítka */
             .option-btn {
                 font-size: clamp(12px, 3.5vw, 14px); 
                 padding: clamp(8px, 2vw, 10px) clamp(10px, 3vw, 20px); 
@@ -309,7 +311,8 @@
         .main-stat {
             background-color: rgba(0, 0, 0, 0.3);
             border-radius: 12px;
-            padding: 20px;
+            /* Důležité: Responzivní padding pro hlavní statistiku pro více místa */
+            padding: clamp(10px, 4vw, 25px); 
             margin-bottom: 15px;
             text-align: center;
             position: relative; 
@@ -426,7 +429,8 @@
         
         .pass-container, .goal-container {
             border-radius: 10px;
-            padding: 15px;
+            /* Původní padding */
+            padding: 15px; 
             text-align: center;
             box-shadow: 0 6px 15px var(--shadow-strong);
             transition: transform 0.3s ease, box-shadow 0.3s ease, background-color 0.3s ease, border 0.3s ease;
@@ -449,7 +453,8 @@
             flex: 1;
             background-color: rgba(0, 0, 0, 0.3);
             border-radius: 10px;
-            padding: 15px;
+            /* Původní padding */
+            padding: 15px; 
             display: flex; 
             flex-direction: column;
             justify-content: center;
@@ -1398,7 +1403,7 @@
                 resetLoadingBar(countries[key]); 
             }
 
-            try { // Hlavní try blok pro celou logiku fetchAllClicks
+            try { // Hlavní try blok pro celou logicu fetchAllClicks
                 // Prochází konfigurace proxy serverů, dokud nenajde funkční
                 for (let i = 0; i < proxyConfigs.length; i++) {
                     const activeProxyConfig = proxyConfigs[i];
@@ -1519,7 +1524,7 @@
                     updateLeaderboardTopCountry(); 
                     
                 } else {
-                    console.error('Nepodařilo se načíst data z proxy serveru. Zkuste to prosím později. Zobrazené hodnoty zůstávají.');
+                    console.error('Nepodařilo se načíst data z proxy serveru. Zkuste to prosím později. Zobrazené hodnoty zůstanou.');
                 }
             } catch (globalError) { 
                 console.error(`Globální chyba při načítání dat:`, globalError); 
