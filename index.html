@@ -858,18 +858,13 @@
         const maxHistoryPoints = 30; // Pro graf
         const apiUrl = 'https://leaderboard.popcat.click/';
         
-        // Všechny dostupné proxy pro testování
+        // Používáme pouze codetabs proxy, jak bylo požadováno.
+        // Ostatní proxy byly odstraněny, protože byly hlášeny jako zpožděné.
         let proxyConfigs = [
-            { url: 'https://corsproxy.io/?', type: 'query' },
-            { url: 'https://api.codetabs.com/v1/proxy/?quest=', type: 'query' },
-            { url: 'https://proxy.cors.sh/', type: 'query' }, // Ponecháno jako další možnost
-            { url: 'https://thingproxy.freeboard.io/fetch/', type: 'query'} // Nová proxy
+            { url: 'https://api.codetabs.com/v1/proxy/?quest=', type: 'query' }
         ];
 
-        let currentProxyIndex = 0; // Globální proměnná pro sledování aktuální proxy
-        let lastSuccessfulProxyIndex = 0; // Index poslední úspěšné proxy
-
-        // Konfigurace pro jednotlivé země
+        // Konfigurace pro jednotlivé země (přesunuto na začátek scriptu)
         const countries = {
             'CZ': {
                 code: 'CZ',
@@ -1093,14 +1088,15 @@
             country.loadingBarEl.style.animation = 'none';
             country.loadingBarEl.style.transform = 'scaleX(0)'; // Explicitně resetovat transformaci
             
-            // Vynucení reflow pro okamžité použití CSS změn před restartem
-            void country.loadingBarEl.offsetWidth; 
+            // Vynucení reflow a restart po krátké prodlevě
+            country.loadingBarTimeout = setTimeout(() => {
+                void country.loadingBarEl.offsetWidth; // Force reflow again just before starting
+                // Nastavení barvy loading baru (zajišťuje, že je vždy správná)
+                country.loadingBarEl.style.backgroundColor = country.color; 
 
-            // Nastavení barvy loading baru (zajišťuje, že je vždy správná)
-            country.loadingBarEl.style.backgroundColor = country.color; 
-
-            // Restart animace
-            country.loadingBarEl.style.animation = `loadingProgress ${LOADING_DURATION}ms linear forwards`;
+                // Restart animace
+                country.loadingBarEl.style.animation = `loadingProgress ${LOADING_DURATION}ms linear forwards`;
+            }, 10); // Malá prodleva k zajištění, že reset je zpracován
         }
 
         // Inicializace grafu pro konkrétní zemi
@@ -1529,64 +1525,54 @@
                 resetLoadingBar(countries[key]); 
             }
 
-            const initialProxyIndex = lastSuccessfulProxyIndex; // Zkusí nejdříve poslední úspěšnou proxy
-            let attempts = 0;
-            const maxAttempts = proxyConfigs.length; // Zkusí každou proxy jednou
+            const proxyToTry = proxyConfigs[0]; // Používáme jen první (a jedinou) proxy
+            let fetchUrl;
 
-            while (attempts < maxAttempts && !fetchSuccessful) {
-                currentProxyIndex = (initialProxyIndex + attempts) % proxyConfigs.length;
-                const proxyToTry = proxyConfigs[currentProxyIndex];
-                let fetchUrl;
+            if (proxyToTry.type === 'query') {
+                fetchUrl = proxyToTry.url + encodeURIComponent(apiUrl);
+            } else { // type === 'path'
+                fetchUrl = proxyToTry.url + apiUrl; 
+            }
 
-                if (proxyToTry.type === 'query') {
-                    fetchUrl = proxyToTry.url + encodeURIComponent(apiUrl);
-                } else { // type === 'path'
-                    fetchUrl = proxyToTry.url + apiUrl; 
-                }
+            console.log(`Pokouším se načíst data z proxy: ${proxyToTry.url.substring(0, 30)}...`);
 
-                console.log(`Pokouším se načíst data z proxy (${currentProxyIndex + 1}/${proxyConfigs.length}, pokus ${attempts + 1}): ${proxyToTry.url.substring(0, 30)}...`);
+            const controller = new AbortController();
+            const timeoutId = setTimeout(() => {
+                console.warn(`Načítání dat z proxy ${proxyToTry.url} vypršelo (timeout po 5 sekundách).`);
+                controller.abort(); // Přeruší fetch, pokud trvá příliš dlouho
+            }, 5000); // 5 sekundový timeout pro samotný fetch
 
-                const controller = new AbortController();
-                const timeoutId = setTimeout(() => {
-                    console.warn(`Načítání dat z proxy ${proxyToTry.url} vypršelo (timeout po 5 sekundách).`);
-                    controller.abort(); // Přeruší fetch, pokud trvá příliš dlouho
-                }, 5000); // 5 sekundový timeout pro samotný fetch
+            try {
+                const currentResponse = await fetch(fetchUrl, { signal: controller.signal });
+                clearTimeout(timeoutId); // Zruší timeout, pokud fetch uspěje včas
 
-                try {
-                    const currentResponse = await fetch(fetchUrl, { signal: controller.signal });
-                    clearTimeout(timeoutId); // Zruší timeout, pokud fetch uspěje včas
-
-                    if (!currentResponse.ok) {
-                        const errorText = await currentResponse.text().catch(() => 'N/A'); // Zkusí získat text chyby
-                        console.warn(`HTTP chyba pro proxy ${proxyToTry.url}: Stav ${currentResponse.status}. Odpověď: ${errorText.substring(0, 100)}`);
+                if (!currentResponse.ok) {
+                    const errorText = await currentResponse.text().catch(() => 'N/A'); // Zkusí získat text chyby
+                    console.warn(`HTTP chyba pro proxy ${proxyToTry.url}: Stav ${currentResponse.status}. Odpověď: ${errorText.substring(0, 100)}`);
+                } else {
+                    const contentType = currentResponse.headers.get('content-type');
+                    if (!contentType || !contentType.includes('application/json')) {
+                        const responseText = await currentResponse.text();
+                        console.warn(`Proxy ${proxyToTry.url} vrátila neočekávaný Content-Type nebo HTML:`, contentType, responseText.substring(0, 200)); 
                     } else {
-                        const contentType = currentResponse.headers.get('content-type');
-                        if (!contentType || !contentType.includes('application/json')) {
-                            const responseText = await currentResponse.text();
-                            console.warn(`Proxy ${proxyToTry.url} vrátila neočekávaný Content-Type nebo HTML:`, contentType, responseText.substring(0, 200)); 
+                        const fetchedData = await currentResponse.json(); 
+                        if (!fetchedData || typeof fetchedData !== 'object') {
+                            console.warn(`Neplatný formát dat z API pro proxy ${proxyToTry.url}:`, fetchedData); 
                         } else {
-                            const fetchedData = await currentResponse.json(); 
-                            if (!fetchedData || typeof fetchedData !== 'object') {
-                                console.warn(`Neplatný formát dat z API pro proxy ${proxyToTry.url}:`, fetchedData); 
-                            } else {
-                                console.log(`Úspěšně načtena data z proxy: ${proxyToTry.url}`);
-                                data = fetchedData; 
-                                fetchSuccessful = true; 
-                                lastSuccessfulProxyIndex = currentProxyIndex; // Uložíme index úspěšné proxy
-                                break; // Úspěch! Ukončete cyklus proxy
-                            }
+                            console.log(`Úspěšně načtena data z proxy: ${proxyToTry.url}`);
+                            data = fetchedData; 
+                            fetchSuccessful = true; 
                         }
                     }
-                } catch (error) {
-                    if (error.name === 'AbortError') {
-                        // Zpráva o timeoutu již byla zaznamenána
-                    } else if (error instanceof TypeError) {
-                        console.warn(`Síťová chyba (CORS/SSL?) pro proxy ${proxyToTry.url}:`, error.message);
-                    } else {
-                        console.warn(`Obecná chyba při načítání dat pomocí proxy ${proxyToTry.url}:`, error);
-                    }
                 }
-                attempts++;
+            } catch (error) {
+                if (error.name === 'AbortError') {
+                    // Zpráva o timeoutu již byla zaznamenána
+                } else if (error instanceof TypeError) {
+                    console.warn(`Síťová chyba (CORS/SSL?) pro proxy ${proxyToTry.url}:`, error.message);
+                } else {
+                    console.warn(`Obecná chyba při načítání dat pomocí proxy ${proxyToTry.url}:`, error);
+                }
             }
 
 
@@ -1663,7 +1649,7 @@
                 }
                 updateLeaderboardTopCountry(); 
             } else {
-                console.error('Nepodařilo se načíst data z žádného proxy serveru. Zobrazené hodnoty zůstanou nezměněny.');
+                console.error('Nepodařilo se načíst data z proxy serveru. Zobrazené hodnoty zůstanou nezměněny.');
             }
             // Naplánovat další fetch POUZE POTÉ, co je tento hotov
             fetchTimeoutId = setTimeout(fetchAllClicks, LOADING_DURATION);
@@ -1677,7 +1663,6 @@
             
             if (!modalTitle || !customGoalInput || !customGoalModal) { // Znovu kontrola existence prvků
                 console.error("Chyba: Elementy modalu nejsou načteny.");
-                // showStatusMessage("Chyba při otevírání cílového okna. Zkuste obnovit stránku.", true); // Removed as per user request
                 return;
             }
 
